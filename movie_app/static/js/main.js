@@ -171,7 +171,7 @@ var movieViewDetailed = function(obj){
     return (
         "<div class='movie_class' id=" + obj.movieId + ">" +
             "<div class ='row'>" +
-                "<h4>" + obj.title + "</h4>" +
+                "<h3>" + obj.title + "</h3>" +
             "</div>" +
             "<div class='row'>" +
                 "<div class='col-sm-2'>" +
