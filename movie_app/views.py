@@ -149,6 +149,8 @@ def get_person_info(movie_ids):
 
 
 def get_rating_info(movie_ids, user):
+    if user.is_anonymous:
+        return pd.DataFrame({'movieId': [], 'rating': []})
     ratings = pd.DataFrame.from_records(
         Rating.objects.filter(movie__movieId__in=movie_ids,
                               user=user).values('movie__movieId', 'rating')
