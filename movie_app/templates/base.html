@@ -36,10 +36,13 @@
         <div class="top">
             <div class="container">
                 <div class="row">
-                    <div class="col-sm-7">
+                    <div class="col-sm-8">
                         Movie App
                     </div>
-                    <div class="col-sm-5">
+                    <div class="col-sm-4">
+                        <style type="text/css">
+                            align: right;
+                        </style>
                         {% if user.is_authenticated %}
                         {{ user.username }}
                         <a href="{% url 'logout' %}?next={% url 'rated-movies-overview' %}">

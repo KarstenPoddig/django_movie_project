@@ -1,3 +1,8 @@
+body {
+    background-color: #FFFAF5;
+}
+
+
 /* The sidebar menu */
 .sidenav {
   height: 100%; /* Full-height: remove this if you want "auto" height */
@@ -6,7 +11,7 @@
   z-index: 1; /* Stay on top */
   top: 0; /* Stay at the top */
   left: 0;
-  background-color: #5c7070;
+  background-color: #4d638c;
   overflow-x: hidden; /* Disable horizontal scroll */
   padding-top: 20px;
 }
@@ -40,7 +45,8 @@ hr {
   margin-left: 200px; /* Same as the width of the sidenav */
   font-size: 25px; /* Increased text to enable scrolling */
   padding: 0px 10px;
-  background-color: #dddddd;
+  background-color: #283654;
+  color: white;
   /*height: 80px;*/
 }
 
@@ -52,9 +58,9 @@ hr {
 
 
 .button {
-  background-color: #6fdcdc;
+  background-color: white;
   border: none;
-  color: white;
+  color: #1c1e24;
   font-weight: bold;
   padding: 15px 32px;
   text-align: center;
@@ -63,17 +69,21 @@ hr {
   font-size: 16px;
   margin: 3px 1px;
   cursor: pointer;
+  border-style: solid;
+  border-color: #283654;
+  border-width: 1px;
 }
 
 
 .button:hover {
-    background-color: #28a4a4;
+    background-color: #4d638c;
+    border-color: #4d638c;
 }
 
 .button_small {
-  background-color: #6fdcdc;
+  background-color: white;
   border: none;
-  color: white;
+  color: #1c1e24;
   font-weight: bold;
   padding: 10px 20px;
   text-align: center;
@@ -85,7 +95,8 @@ hr {
 }
 
 .button_small:hover {
-    background-color: #28a4a4;
+    background-color: #4d638c;
+    border-color: #4d638c;
 }
 
 @import url(//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
@@ -134,14 +145,19 @@ h1 { font-size: 1.5em; margin: 10px; }
 
 /* Movie Class */
 
+h3 {
+    text-align: center;
+}
+
 .movie_class {
-    background-color: #effbfb;
-    border-style: solid;
+    background-color: #cfe0f9;
+    /*border-style: solid;
     border-color: #144e4e;
-    border-width: 3px;
+    border-width: 3px;*/
     padding: 15px 32px;
     text-align: left;
     margin-top: 20px;
+    color: #1c1e24;
 }
 
 .scrollmenu {
@@ -168,7 +184,7 @@ h1 { font-size: 1.5em; margin: 10px; }
 /* Dropdown for Genre and Year Filter */
 
 .dropbtn {
-  background-color: #6fdcdc;
+  background-color: #4d638c;
   color: white;
   padding: 16px;
   font-size: 16px;
@@ -200,7 +216,7 @@ h1 { font-size: 1.5em; margin: 10px; }
 
 .dropdown:hover .dropdown-content {display: block;}
 
-.dropdown:hover .dropbtn {background-color: #28a4a4;}
+.dropdown:hover .dropbtn {background-color: #283654;}
 
 /* Filter criterion */
 
