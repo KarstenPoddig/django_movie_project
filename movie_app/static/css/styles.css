@@ -1,0 +1,219 @@
+/* The sidebar menu */
+.sidenav {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  width: 200px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  background-color: #5c7070;
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px;
+}
+
+/* The navigation menu links */
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: white;
+  display: block;
+}
+
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  background-color: #111;
+}
+
+/*.row {
+    text-align: center;
+    vertical-align: middle;
+}*/
+
+hr {
+    height: 5px;
+    border: 0px solid white;
+    border-top-width: 2px;
+}
+
+.top {
+  margin-left: 200px; /* Same as the width of the sidenav */
+  font-size: 25px; /* Increased text to enable scrolling */
+  padding: 0px 10px;
+  background-color: #dddddd;
+  /*height: 80px;*/
+}
+
+.main {
+  margin-left: 200px; /* Same as the width of the sidenav */
+  font-size: 20px; /* Increased text to enable scrolling */
+  padding: 0px 20px;
+}
+
+
+.button {
+  background-color: #6fdcdc;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 3px 1px;
+  cursor: pointer;
+}
+
+
+.button:hover {
+    background-color: #28a4a4;
+}
+
+.button_small {
+  background-color: #6fdcdc;
+  border: none;
+  color: white;
+  font-weight: bold;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 3px 1px;
+  cursor: pointer;
+}
+
+.button_small:hover {
+    background-color: #28a4a4;
+}
+
+@import url(//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
+
+/*
+fieldset, label { margin: 0; padding: 0; }
+body{ margin: 20px; }
+h1 { font-size: 1.5em; margin: 10px; }
+*/
+/****** Style Star Rating Widget *****/
+
+.rating {
+  border: none;
+  float: left;
+}
+
+.rating > input { display: none; }
+.rating > label:before {
+  margin: 5px;
+  font-size: 1.25em;
+  font-family: FontAwesome;
+  display: inline-block;
+  content: "\f005";
+}
+
+.rating > .half:before {
+  content: "\f089";
+  position: absolute;
+}
+
+.rating > label {
+  color: #ddd;
+ float: right;
+}
+
+/***** CSS Magic to Highlight Stars on Hover *****/
+
+.rating > input:checked ~ label, /* show gold star when clicked */
+.rating:not(:checked) > label:hover, /* hover current star */
+.rating:not(:checked) > label:hover ~ label { color: #ff8100;  } /* hover previous stars in list */
+
+.rating > input:checked + label:hover, /* hover current star when changing rating */
+.rating > input:checked ~ label:hover,
+.rating > label:hover ~ input:checked ~ label, /* lighten current selection */
+.rating > input:checked ~ label:hover ~ label { color: #ffb085;  }
+
+/* Movie Class */
+
+.movie_class {
+    background-color: #effbfb;
+    border-style: solid;
+    border-color: #144e4e;
+    border-width: 3px;
+    padding: 15px 32px;
+    text-align: left;
+    margin-top: 20px;
+}
+
+.scrollmenu {
+  overflow: auto;
+  white-space:nowrap;
+  width: 100%;
+  scrollbar-color: #aaaaaa;
+}
+
+
+.similarity_class {
+    background-color: #effbfb;
+    padding: 15px 32px;
+    border-style: solid;
+    border-color: #144e4e;
+    border-width: 3px;
+    display: inline-block;
+    vertical-align:top;
+    margin-right:20px;
+    white-space:normal;
+    width: 20%;
+}
+
+/* Dropdown for Genre and Year Filter */
+
+.dropbtn {
+  background-color: #6fdcdc;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {background-color: #dddddd;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #28a4a4;}
+
+/* Filter criterion */
+
+.filter_criterion {
+  border-radius: 25px;
+  background: #dddddd;
+  padding: 5px;
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* Filter Area */
+
+.filter_area {
+    background-color: #eeeeee;
+}

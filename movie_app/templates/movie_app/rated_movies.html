@@ -1,0 +1,12 @@
+{% extends "base_movie.html" %}
+
+{% block content %}
+
+    <h3>Rated Movies</h3>
+
+    <script type="text/javascript">
+        var only_rated_movies = 1;
+        var url_movie_search_short = '{% url 'movie-search-short' only_rated_movies=1 %}';
+    </script>
+
+{% endblock %}

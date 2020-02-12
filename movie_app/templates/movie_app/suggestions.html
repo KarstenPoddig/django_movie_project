@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+
+{% block content_outer %}
+
+<h2>Based on your ratings you may also like:</h2>
+    ...
+
+<h2>Based on a specific movie:</h2>
+
+    <div class="ui-widget">
+        <label for="movie_title">Based on:</label>
+        <input name="movie_title" id="movie_title">
+        <button id="search_button" class="button_small" type="submit">Search!</button>
+    </div>
+
+    <div id="movie_base"></div>
+
+<h4>Results:</h4>
+    <div id="similarity_list"></div>
+
+
+    <h2>Method 3 ....</h2>
+    Movie recommendations based on ...
+
+    {% load static %}
+    <script type="text/javascript">
+        var url_movie_search_short = '{% url 'movie-search-short' only_rated_movies=0 %}';
+    </script>
+    <link rel="stylesheet" href="{% static 'css/jquery.rateyo.min.css' %}"/>
+    <script type="text/javascript" src="{% static 'js/jquery.rateyo.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+    <script type="text/javascript">
+        // click Search-Button when Enter is pressed in the Input-Field
+        var input = document.getElementById('movie_title');
+        input.addEventListener('keyup', function(event){
+            if (event.keyCode === 13){
+                event.preventDefault();
+                document.getElementById('search_button').click();
+             }
+         });
+
+        // Search base movie
+        var search_elem = document.getElementById('movie_title');
+        var result_elem = document.getElementById('movie_base');
+
+        // search Movies on button click
+        var search_button = document.getElementById('search_button');
+        search_button.onclick = function(){
+            getMovies(search_elem, result_elem, 0, 1);
+        };
+    </script>
+
+{% endblock %}
