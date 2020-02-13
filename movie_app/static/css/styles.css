@@ -1,5 +1,5 @@
 body {
-    background-color: #FFFAF5;
+    background-color: white;
 }
 
 
@@ -150,14 +150,17 @@ h3 {
 }
 
 .movie_class {
-    background-color: #cfe0f9;
+    background-color: #fafcff;/*#cfe0f9;*/
     /*border-style: solid;
     border-color: #144e4e;
     border-width: 3px;*/
-    padding: 15px 32px;
+    padding: 0px 15px;
     text-align: left;
     margin-top: 20px;
     color: #1c1e24;
+    -moz-box-shadow:    3px 3px 5px 2px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
+    box-shadow:         3px 3px 5px 2px #ccc;
 }
 
 .scrollmenu {
@@ -179,6 +182,9 @@ h3 {
     margin-right:20px;
     white-space:normal;
     width: 20%;
+    -moz-box-shadow:    3px 3px 5px 2px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
+    box-shadow:         3px 3px 5px 2px #ccc;
 }
 
 /* Dropdown for Genre and Year Filter */
