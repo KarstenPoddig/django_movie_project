@@ -41,6 +41,12 @@
 
     <div id="movie_list"></div>
 
+    <div class="container_loader" id="movie_loader">
+        <div class="loader"></div>
+        <p>Loading ...</p>
+    </div>
+
+
     {% load static %}
     <script src="{% static 'js/main.js' %}" type="text/javascript"></script>
 
@@ -64,7 +70,7 @@
         // Search Movies
         var search_elem = document.getElementById('movie_title');
         var result_elem = document.getElementById('movie_list');
-        var nr_movies = 50;
+        var nr_movies = 20;
 
         // Search Movies initially
         getMovies(search_elem, result_elem, only_rated_movies, nr_movies);

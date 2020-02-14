@@ -90,6 +90,7 @@ var initFilters = function(){
 // Movie Functionalities
 
 var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies){
+    $('#movie_loader').show();
     $.ajax({
         type: 'GET',
         url: url_movie_search_long,
@@ -103,7 +104,8 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies)
             'filter_year': filter_dict['Year'].join(','),
          },
          success: function(data){
-            console.log(data)
+            $('#movie_loader').hide();
+            console.log(data);
             result_elem.innerHTML = '';
 
             if(data == null){
@@ -171,8 +173,8 @@ var movieViewDetailed = function(obj){
     return (
         "<div class='movie_class' id=" + obj.movieId + ">" +
             "<div class ='row' style='background-color: #dee9fa'>" +
-                "<div class='movie_title_wrapper' style='margin: 0 10px;'>" +
-                    "<h3>" + obj.title + "</h3>" +
+                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
+                    obj.title +
                 "</div>" +
             "</div>" +
             "<div class='row'>" +
@@ -228,4 +230,9 @@ var movieSimilariyView = function(obj){
     )
 };
 
+// Sidenav-menu-button
+var sidenavButtonClick = function(x) {
+  x.classList.toggle("change");
+  $('.sidenav').toggle("change");
+}
 
