@@ -48,13 +48,9 @@
 
 
     {% load static %}
-    <script src="{% static 'js/main.js' %}" type="text/javascript"></script>
 
-    <link rel="stylesheet" href="{% static 'css/jquery.rateyo.min.css' %}"/>
-    <script type="text/javascript" src="{% static 'js/jquery.rateyo.min.js' %}"></script>
-
+    <script type="text/javascript" src="{% static 'js/base_movie.js' %}"></script>
     <script type="text/javascript">
-
         // initialize Filter dropdown menus
         initFilters();
 
@@ -82,5 +78,10 @@
         };
 
     </script>
+    <link rel="stylesheet" href="{% static 'css/jquery.rateyo.min.css' %}"/>
+    <script type="text/javascript" src="{% static 'js/jquery.rateyo.min.js' %}"></script>
+
+
+
 
 {% endblock %}
