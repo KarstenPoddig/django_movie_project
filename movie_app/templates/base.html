@@ -22,41 +22,6 @@
     </head>
 
     <body>
-        <div class="top">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-1">
-                        <div class="sidenav_button_container" onclick="sidenavButtonClick(this);">
-                            <div class="bar1"></div>
-                            <div class="bar2"></div>
-                            <div class="bar3"></div>
-                            Menu
-                        </div>
-                    </div>
-                    <div class="col-sm-7">
-                        Movie App
-                    </div>
-                    <div class="col-sm-4">
-                        <style type="text/css">
-                            align: right;
-                        </style>
-                        {% if user.is_authenticated %}
-                        {{ user.username }}
-                        <a href="{% url 'logout' %}?next={% url 'rated-movies-overview' %}">
-                            <button class="button">Logout</button>
-                        </a>
-                        {% else %}
-                        <a href="{% url 'signup' %}">
-                            <button class="button">Sign up</button>
-                        </a>
-                        <a href="{% url 'login' %}?next={% url 'all-movies-overview' %}">
-                            <button class="button">Login</button>
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
         <div class="sidenav">
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'test' %}">Test</a>
@@ -69,33 +34,70 @@
             {% endif %}
         </div>
 
-        <div class="main">
-            {% block content_outer %}
-            {% endblock %}
-
-            {% block pagination %}
-            {% if is_paginated %}
-                <div class="pagination">
-                    <span class="page-links">
-                        {% if page_obj.has_previous %}
-                            <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">
-                                <button class="button">Previous</button>
+        <div class="content">
+            <div class="top">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-1">
+                            <div class="sidenav_button_container" onclick="sidenavButtonClick(this);">
+                                <div class="bar1"></div>
+                                <div class="bar2"></div>
+                                <div class="bar3"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            Movie App
+                        </div>
+                        <div class="col-sm-4">
+                            <style type="text/css">
+                                align: right;
+                            </style>
+                            {% if user.is_authenticated %}
+                            {{ user.username }}
+                            <a href="{% url 'logout' %}?next={% url 'rated-movies-overview' %}">
+                                <button class="button">Logout</button>
                             </a>
-                        {% endif %}
-
-                        <span class="page-current">
-                            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                        </span>
-
-                        {% if page_obj.has_next %}
-                            <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">
-                                <button class="button">Next</button>
+                            {% else %}
+                            <a href="{% url 'signup' %}">
+                                <button class="button">Sign up</button>
                             </a>
-                        {% endif %}
-                    </span>
+                            <a href="{% url 'login' %}?next={% url 'all-movies-overview' %}">
+                                <button class="button">Login</button>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                {% endif %}
-            {% endblock %}
+            </div>
+
+            <div class="main">
+                {% block content_outer %}
+                {% endblock %}
+
+                {% block pagination %}
+                {% if is_paginated %}
+                    <div class="pagination">
+                        <span class="page-links">
+                            {% if page_obj.has_previous %}
+                                <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}">
+                                    <button class="button">Previous</button>
+                                </a>
+                            {% endif %}
+
+                            <span class="page-current">
+                                {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                            </span>
+
+                            {% if page_obj.has_next %}
+                                <a href="{{ request.path }}?page={{ page_obj.next_page_number }}">
+                                    <button class="button">Next</button>
+                                </a>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                {% endblock %}
+            </div>
         </div>
     </body>
 
