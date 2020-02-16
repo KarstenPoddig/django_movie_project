@@ -74,7 +74,10 @@ var initFilters = function(){
 // Movie Functionalities
 
 var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies){
+
     $('#movie_loader').show();
+    result_elem.innerHTML = '';
+
     $.ajax({
         type: 'GET',
         url: url_movie_search_long,
@@ -140,6 +143,11 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies)
                     });
                 });
             }
+
+         },
+         error: function(){
+            $('#movie_loader').hide();
+            result_elem.innerHTML = 'Server Error'
 
          }
     });

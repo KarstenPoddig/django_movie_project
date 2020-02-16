@@ -68,7 +68,7 @@ def filter_movies_only_rated(user, only_rated_movies):
 
 def filter_movies_term(term):
     movie_ids = pd.DataFrame.from_records(
-        Movie.objects.filter(title__contains=term).values()
+        Movie.objects.filter(title__contains=term).values('movieId')
     ).movieId
     return pd.Index(movie_ids)
 

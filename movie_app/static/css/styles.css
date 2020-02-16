@@ -1,12 +1,12 @@
 body {
     background-color: white;
     font-family: "Lato", sans-serif;
-    font-size: 16px;
 }
 
 .content {
     transition: margin-left .2s;
     margin-left: 250px;
+    overflow-x: hidden;
 }
 
 
@@ -54,17 +54,15 @@ hr {
 
 .top {
   font-size: 25px; /* Increased text to enable scrolling */
-  /*padding: 0px 10px;*/
   background-color: #283654;
   color: white;
-  /*height: 80px;*/
+  padding: 5px;
 }
 
 .main {
   font-size: 20px; /* Increased text to enable scrolling */
   padding: 0px 20px;
 }
-
 
 .button {
   background-color: white;
@@ -160,9 +158,6 @@ h3 {
 
 .movie_class {
     background-color: #fafcff;/*#cfe0f9;*/
-    /*border-style: solid;
-    border-color: #144e4e;
-    border-width: 3px;*/
     padding: 0px 15px;
     text-align: left;
     margin-top: 20px;
@@ -271,10 +266,6 @@ h3 {
 }
 
 /* Sidenav-Button */
-/*.container {
-  display: inline-block;
-  cursor: pointer;
-}*/
 
 .sidenav_button_container {
     padding: 0px;
@@ -285,5 +276,4 @@ h3 {
   height: 5px;
   background-color: white;
   margin: 6px 0;
-  transition: 0.4s;
 }
