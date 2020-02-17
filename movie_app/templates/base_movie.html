@@ -39,6 +39,8 @@
 
     {% endblock %}
 
+    <div id="result_nav_area_top" align="center"></div>
+
     <div id="movie_list"></div>
 
     <div class="container_loader" id="movie_loader">
@@ -46,6 +48,7 @@
         <p>Searching ...</p>
     </div>
 
+    <div id="result_nav_area_bottom" align="center"></div>
 
     {% load static %}
 
@@ -53,6 +56,8 @@
     <script type="text/javascript">
         // initialize Filter dropdown menus
         initFilters();
+        // initialize page number
+        var page_number = 1;
 
         // click Search-Button when Enter is pressed in the Input-Field
         var input = document.getElementById('movie_title');
@@ -66,15 +71,15 @@
         // Search Movies
         var search_elem = document.getElementById('movie_title');
         var result_elem = document.getElementById('movie_list');
-        var nr_movies = 20;
+        var nr_results_shown = 20;
 
         // Search Movies initially
-        getMovies(search_elem, result_elem, only_rated_movies, nr_movies);
+        getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);
 
         // Search Movies on button click
         var search_button = document.getElementById('search_button');
         search_button.onclick = function(){
-            getMovies(search_elem, result_elem, only_rated_movies, nr_movies);
+            getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);
         };
 
     </script>

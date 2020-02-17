@@ -165,14 +165,22 @@ def get_rating_info(movie_ids, user):
     return ratings
 
 
-def movie_search_long(request):
+def get_entries(nr_results_shown, nr_results_total, page_number):
 
-    ## Preprocessing: reading the parameters from the request
+    nr_entry_start = (page_number-1)*nr_results_shown
+    nr_entry_end = min(page_number*nr_results_shown, nr_results_total)
+
+    return range(nr_entry_start, nr_entry_end)
+
+
+def movie_search_long(request):
+    # Preprocessing: reading the parameters from the request
     term = request.GET.get('term', '')
     only_rated_movies = int(request.GET.get('only_rated_movies', 0))
-    nr_movies = int(request.GET.get('nr_movies', 10))
+    nr_results_shown = int(request.GET.get('nr_results_shown', 10))
     filter_genre = request.GET.get('filter_genre', '')
     filter_year = request.GET.get('filter_year', '')
+    page_number = int(request.GET.get('page_number', 10))
 
     movie_ids_only_rated = filter_movies_only_rated(request.user, only_rated_movies)
     movie_ids_term = filter_movies_term(term)
@@ -181,7 +189,11 @@ def movie_search_long(request):
 
     movie_ids = movie_ids_only_rated.intersection(movie_ids_term)
     movie_ids = movie_ids.intersection(movie_ids_genre)
-    movie_ids = movie_ids.intersection(movie_ids_year)[:nr_movies]
+    movie_ids = movie_ids.intersection(movie_ids_year)
+
+    nr_results_total = len(movie_ids)
+    entries = get_entries(nr_results_shown, nr_results_total, page_number)
+    movie_ids = movie_ids[entries]
 
     movies = get_movies(movie_ids)
     movies = movies.merge(get_genre_info(movie_ids),
@@ -192,7 +204,11 @@ def movie_search_long(request):
                           how='left', on='movieId')
     movies.replace(np.nan, '', inplace=True)
     movies = movies.to_dict('records')
-    return HttpResponse(json.dumps(movies), 'application/json')
+    output_dict = {'movies': movies, 'meta': {'nr_results_total': nr_results_total,
+                                              'total_number_pages': np.ceil(nr_results_total/nr_results_shown),
+                                              'page_number': page_number,
+                                              'nr_results_shown': nr_results_shown}}
+    return HttpResponse(json.dumps(output_dict), 'application/json')
 
 
 def rate_movie(request):

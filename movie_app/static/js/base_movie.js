@@ -73,10 +73,65 @@ var initFilters = function(){
 
 // Movie Functionalities
 
-var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies){
+var createResultNavHTML = function(meta_data){
+    console.log(meta_data);
+
+    htmlString = '';
+
+    var last_page = Math.ceil(meta_data['nr_results_total'] / meta_data['nr_results_shown'])
+
+    // if page_number > 1 create previous button
+    if(page_number>1){
+        htmlString += "<div class='button' " +
+            "onclick='page_number+=(-1);getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>Previous</div>"
+    }
+
+    // if page_number > 1, create button with page number 1
+    if(page_number > 1){
+        htmlString +="<div class='button' " +
+                "onclick='page_number=1;getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>1</div>"
+    }
+
+    if(page_number > 2){
+        htmlString += " ... "
+    }
+
+    // always print actual page
+    htmlString +="<div class='button' style='background-color: #4d638c; border-color: #4d638c;color: white;'>" +
+         page_number +
+         "</div>";
+
+    if(page_number < last_page -1){
+        htmlString += " ... "
+    }
+
+    // if page_number < last_page, create button for last page
+    if(page_number < last_page){
+        htmlString +="<div class='button' " +
+                "onclick='page_number=" +
+                last_page +
+                ";getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>" +
+                 last_page +
+                 "</div>";
+    }
+    // page is not last page, create next-button
+    if(page_number<last_page){
+        htmlString += "<div class='button' " +
+            "onclick='page_number+=1;getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>Next</div>"
+    }
+
+    return(htmlString);
+};
+
+
+var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies, page_number){
 
     $('#movie_loader').show();
     result_elem.innerHTML = '';
+    var result_nav_elem_top = document.getElementById('result_nav_area_top');
+    result_nav_elem_top.innerHTML = '';
+    var result_nav_elem_bottom = document.getElementById('result_nav_area_bottom');
+    result_nav_area_bottom.innerHTML = '';
 
     $.ajax({
         type: 'GET',
@@ -86,13 +141,22 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies)
         data: {
             'term': search_elem.value,
             'only_rated_movies': only_rated_movies,
-            'nr_movies': nr_movies,
+            'nr_results_shown': nr_results_shown,
+            'page_number': page_number,
             'filter_genre': filter_dict['Genre'].join(','),
             'filter_year': filter_dict['Year'].join(','),
-         },
+        },
          success: function(data){
+            // disable loading symbol
             $('#movie_loader').hide();
-            console.log(data);
+
+            // create navigation area
+            result_nav_elem_top.innerHTML = createResultNavHTML(data['meta'])
+            result_nav_elem_bottom.innerHTML = result_nav_area_top.innerHTML;
+
+            console.log(data['meta'])
+
+            //
             result_elem.innerHTML = '';
 
             if(data == null){
@@ -102,16 +166,16 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies)
 
             var htmlString = '';
 
-            for(var i=0; i<data.length; i++){
-                var obj = data[i];
+            for(var i=0; i<data['movies'].length; i++){
+                var obj = data['movies'][i];
                 htmlString+= movieViewDetailed(obj)
 
             };
             result_elem.innerHTML += htmlString
 
             // setting and changing the rating
-            for(var i=0; i<data.length; i++){
-                var obj = data[i];
+            for(var i=0; i<data['movies'].length; i++){
+                var obj = data['movies'][i];
                 var rating;
 
                 if (typeof(obj.rating)=='number'){
