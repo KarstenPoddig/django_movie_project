@@ -74,12 +74,13 @@
         var nr_results_shown = 20;
 
         // Search Movies initially
-        getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);
+        getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, 1);
 
         // Search Movies on button click
         var search_button = document.getElementById('search_button');
         search_button.onclick = function(){
-            getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);
+            getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, 1);
+            page_number = 1;
         };
 
     </script>

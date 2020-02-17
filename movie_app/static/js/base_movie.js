@@ -8,16 +8,13 @@ $('#movie_title').autocomplete({
 var filter_dict = {'Genre': [], 'Year': []}
 
 var addFilter = function(type,value){
-
     var parent_node;
-
     if(type == 'Genre'){
         parent_node = document.getElementById('active_genre_filter');
     }
     if(type == 'Year'){
         parent_node = document.getElementById('active_year_filter');
     }
-
     if(!filter_dict[type].includes(value)){
 
         filter_dict[type].push(value);
@@ -42,13 +39,11 @@ var clearFilter = function(){
 }
 
 var initFilters = function(){
-
     var elem_filter_genre = document.getElementById('filter_genre');
     var genre_entries = ['Adventure','Animation','Children','Comedy','Fantasy',
                         'Romance', 'Drama', 'Action', 'Crime', 'Thriller', 'Horror',
                         'Mystery','Sci-Fi','IMAX','Documentary','War','Musical','Western',
                         'Film-Noir'];
-
     for(var i=0;i<genre_entries.length;i++){
         var elem_a = document.createElement("a");
         elem_a.innerHTML = genre_entries[i];
@@ -57,10 +52,8 @@ var initFilters = function(){
         };
         elem_filter_genre.appendChild(elem_a);
     };
-
     var elem_filter_year = document.getElementById('filter_year')
     var year_entries = ['1950s and earlier', '1960s', '1970s', '1980s', '1990s', '2000s', '2010s']
-
     for(var i=0;i<year_entries.length;i++){
         var elem_a = document.createElement("a");
         elem_a.innerHTML = year_entries[i];
@@ -75,27 +68,21 @@ var initFilters = function(){
 
 var createResultNavHTML = function(meta_data){
     console.log(meta_data);
-
     htmlString = '';
-
     var last_page = Math.ceil(meta_data['nr_results_total'] / meta_data['nr_results_shown'])
-
     // if page_number > 1 create previous button
     if(page_number>1){
         htmlString += "<div class='button' " +
             "onclick='page_number+=(-1);getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>Previous</div>"
     }
-
     // if page_number > 1, create button with page number 1
     if(page_number > 1){
         htmlString +="<div class='button' " +
                 "onclick='page_number=1;getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>1</div>"
     }
-
     if(page_number > 2){
         htmlString += " ... "
     }
-
     // always print actual page
     htmlString +="<div class='button' style='background-color: #4d638c; border-color: #4d638c;color: white;'>" +
          page_number +
@@ -104,7 +91,6 @@ var createResultNavHTML = function(meta_data){
     if(page_number < last_page -1){
         htmlString += " ... "
     }
-
     // if page_number < last_page, create button for last page
     if(page_number < last_page){
         htmlString +="<div class='button' " +
@@ -119,7 +105,6 @@ var createResultNavHTML = function(meta_data){
         htmlString += "<div class='button' " +
             "onclick='page_number+=1;getMovies(search_elem, result_elem, only_rated_movies, nr_results_shown, page_number);'>Next</div>"
     }
-
     return(htmlString);
 };
 

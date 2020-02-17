@@ -204,10 +204,11 @@ def movie_search_long(request):
                           how='left', on='movieId')
     movies.replace(np.nan, '', inplace=True)
     movies = movies.to_dict('records')
-    output_dict = {'movies': movies, 'meta': {'nr_results_total': nr_results_total,
-                                              'total_number_pages': np.ceil(nr_results_total/nr_results_shown),
-                                              'page_number': page_number,
-                                              'nr_results_shown': nr_results_shown}}
+    output_dict = {'meta': {'nr_results_total': nr_results_total,
+                            'total_number_pages': np.ceil(nr_results_total/nr_results_shown),
+                            'page_number': page_number,
+                            'nr_results_shown': nr_results_shown},
+                   'movies': movies}
     return HttpResponse(json.dumps(output_dict), 'application/json')
 
 
