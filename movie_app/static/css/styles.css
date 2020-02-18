@@ -177,16 +177,15 @@ h3 {
 
 
 .similarity_class {
-    background-color: #effbfb;
-    padding: 15px 32px;
-    border-style: solid;
-    border-color: #144e4e;
-    border-width: 3px;
+    background-color: #fafcff;
+    padding: 0px 15px;
     display: inline-block;
     vertical-align:top;
-    margin-right:20px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-right: 10px;
     white-space:normal;
-    width: 20%;
+    width: 200px;
     -moz-box-shadow:    3px 3px 5px 2px #ccc;
     -webkit-box-shadow: 3px 3px 5px 2px #ccc;
     box-shadow:         3px 3px 5px 2px #ccc;

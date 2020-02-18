@@ -166,9 +166,8 @@ def get_rating_info(movie_ids, user):
 
 
 def get_entries(nr_results_shown, nr_results_total, page_number):
-
-    nr_entry_start = (page_number-1)*nr_results_shown
-    nr_entry_end = min(page_number*nr_results_shown, nr_results_total)
+    nr_entry_start = (page_number - 1) * nr_results_shown
+    nr_entry_end = min(page_number * nr_results_shown, nr_results_total)
 
     return range(nr_entry_start, nr_entry_end)
 
@@ -205,7 +204,7 @@ def movie_search_long(request):
     movies.replace(np.nan, '', inplace=True)
     movies = movies.to_dict('records')
     output_dict = {'meta': {'nr_results_total': nr_results_total,
-                            'total_number_pages': np.ceil(nr_results_total/nr_results_shown),
+                            'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
                             'page_number': page_number,
                             'nr_results_shown': nr_results_shown},
                    'movies': movies}
@@ -257,18 +256,23 @@ class SuggestionView(TemplateView):
 
 def similar_movies(request):
     movieId = int(request.GET.get('movieId', ''))
-    queryset = MoviesSimilar.objects.filter(baseMovie__movieId=movieId)
-    df_movie = pd.DataFrame({'movieId': np.full(len(queryset), ''),
-                             'title': np.full(len(queryset), ''),
-                             'similarity_score': np.full(len(queryset), ''),
-                             'url_movie_poster': np.full(len(queryset), '')})
 
-    for i in range(len(queryset)):
-        elem = queryset[i]
-        df_movie.at[i, 'movieId'] = elem.similarMovie.movieId
-        df_movie.at[i, 'title'] = elem.similarMovie.title
-        df_movie.at[i, 'similarity_score'] = elem.similarity_score
-        df_movie.at[i, 'urlMoviePoster'] = elem.similarMovie.urlMoviePoster
-    df_movie = df_movie.to_dict('records')
+    movie_similarity_matrix = np.load('Analysen/rating_matrix/movie_similarity_matrix_final.npy')
+    df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
+    df_similarity = df_movie_index
+    df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
 
-    return HttpResponse(json.dumps(df_movie), 'application/json')
+    # movie is not contained in similarity matrix
+    if df_movie_index.empty:
+        print('Movie not contained')
+        return HttpResponse(json.dumps({}), 'application/json')
+
+    df_similarity['similarity_score'] = movie_similarity_matrix[df_movie_index.row_index.iloc[0]]
+
+    df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:11]
+
+    movies = df_similarity.merge(get_movies(df_similarity.movieId),
+                                 how='inner', on='movieId')
+    movies = movies.to_dict('records')
+
+    return HttpResponse(json.dumps(movies), 'application/json')

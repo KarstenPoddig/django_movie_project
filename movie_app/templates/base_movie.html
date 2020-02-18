@@ -83,6 +83,12 @@
             page_number = 1;
         };
 
+        // autocomplete movie search field
+        $('#movie_title').autocomplete({
+            source: url_movie_search_short,
+            minLength: 3,
+        });
+
     </script>
     <link rel="stylesheet" href="{% static 'css/jquery.rateyo.min.css' %}"/>
     <script type="text/javascript" src="{% static 'js/jquery.rateyo.min.js' %}"></script>

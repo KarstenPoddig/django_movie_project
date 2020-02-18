@@ -1,7 +1,3 @@
-$('#movie_title').autocomplete({
-    source: url_movie_search_short,
-    minLength: 3,
-})
 
 // Filter Functionalities
 
@@ -203,10 +199,61 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
 };
 
 
+var getSingleMovie = function(search_elem, result_elem){
 
-var rateMovie = function(movieId,rating){
-    console.log(movieId)
+    $.ajax({
+        type: 'GET',
+        url: url_movie_search_long,
+        dataType: 'json',
+        cache: true,
+        data: {
+            'term': search_elem.value,
+            'only_rated_movies': 0,
+            'nr_results_shown': 1,
+            'page_number': 1,
+            'filter_genre': '',
+            'filter_year': '',
+        },
+         success: function(data){
+
+            console.log(data['meta'])
+
+            var obj = data['movies'][0];
+
+            result_elem.innerHTML = movieViewDetailed(obj);
+
+            var rating;
+            if (typeof(obj.rating)=='number'){
+                rating = obj.rating;
+            }
+            else{
+                rating = 0;
+            }
+
+            $('#rateyo_' + obj.movieId).rateYo({
+                numStars: 5,
+                halfStar: true,
+                rating: rating
+            }).on('rateyo.set', function(e, data){
+                var movieId = this.id.split("_")[1]
+                $.ajax({
+                    'type': 'POST',
+                    'url': url_rate_movie,
+                    'data': {
+                        'movieId': movieId,
+                        'rating': data.rating,
+                        'csrfmiddlewaretoken': getCookie("csrftoken")
+                    }
+                });
+            });
+            getSimilarMovies(movieId = obj.movieId);
+         },
+         error: function(){
+            result_elem.innerHTML = 'Server Error'
+         }
+    });
 };
+
 
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
 var movieViewDetailed = function(obj){
@@ -245,27 +292,37 @@ var movieViewDetailed = function(obj){
 
 var getSimilarMovies = function(movieId){
 
+    // load similar movies
+    $('#similar_movie_loader').show()
+
     $.getJSON(url_similar_movies,
         {'movieId': movieId},
         function(data){
+            console.log(data);
             var htmlString = ''
             htmlString = "<div class='scrollmenu'>";
             for(var i=0;i<data.length;i++){
                 obj = data[i];
-                htmlString += movieSimilariyView(obj);
+                htmlString += movieSimilarityView(obj);
             }
             htmlString +=   "</div>";
             document.getElementById('similarity_list').innerHTML = htmlString;
+
+            $('#similar_movie_loader').hide();
         }
     )
 }
 
 
-var movieSimilariyView = function(obj){
+var movieSimilarityView = function(obj){
     return(
         "<div class='similarity_class'>" +
-            "<p>" + obj.title + "</p>" +
-            "<p>" + obj.similarity_score.toFixed(2) + "</p>" +
+            "<div class ='row' style='background-color: #dee9fa'>" +
+                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
+                    obj.title +
+                "</div>" +
+            "</div>" +
+            "<p> Similarity Score: " + obj.similarity_score.toFixed(2) + "</p>" +
             "<img src=" + obj.urlMoviePoster + " width='60%'>" +
         "</div>"
     )
