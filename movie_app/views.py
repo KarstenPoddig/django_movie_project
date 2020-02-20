@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 import pandas as pd
 from movie_app.models import Genre, MovieGenre, MoviePerson, Role, Person, MoviesSimilar
 import numpy as np
+from django.db.models import Count, Avg
 import requests
 
 
@@ -261,18 +262,104 @@ def similar_movies(request):
     df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
     df_similarity = df_movie_index
     df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
-
     # movie is not contained in similarity matrix
     if df_movie_index.empty:
         print('Movie not contained')
         return HttpResponse(json.dumps({}), 'application/json')
 
     df_similarity['similarity_score'] = movie_similarity_matrix[df_movie_index.row_index.iloc[0]]
-
-    df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:11]
-
+    df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:21]
     movies = df_similarity.merge(get_movies(df_similarity.movieId),
                                  how='inner', on='movieId')
+    movies = movies.to_dict('records')
+    return HttpResponse(json.dumps(movies), 'application/json')
+
+
+def drop_rated_movies(movies, user):
+    rated_movies = pd.DataFrame.from_records(
+        Rating.objects.filter(user=user).values()
+    )
+    movies = movies[~movies.movieId.isin(rated_movies.movie_id)]
+    return movies
+
+
+def get_top_movielen_movies(user, nr_movies):
+    qs = Rating.objects.values('movie_id').annotate(Count('rating'), Avg('rating')) \
+        .filter(rating__count__gte=50).order_by('-rating__avg')
+    movies = pd.DataFrame.from_records(qs).drop('rating__count', axis=1)
+    movies.columns = ['movieId', 'rating_exp']
+    movies = drop_rated_movies(movies, user)
+    movies = movies[:nr_movies]
+    return movies
+
+
+def get_top_movies_imdb(user, nr_movies):
+    movies = pd.DataFrame.from_records(
+        Movie.objects.all().order_by('-imdbRating').values('movieId', 'imdbRating')
+    )
+    movies.columns = ['movieId', 'rating_exp']
+    movies.dropna(axis=0, inplace=True)
+    movies = drop_rated_movies(movies, user)
+    movies = movies[:nr_movies]
+    return movies
+
+
+def get_top_movies_similarity(user, nr_movies):
+
+    #movie_similarity_matrix = np.load('Analysen/rating_matrix/movie_similarity_matrix_final.npy')
+    #df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
+
+    # df_user_ratings = pd.DataFrame.from_records(Rating.objects.filter(user=request.user).values())
+    # df_user_ratings = df_user_ratings.merge(df_movie_index, how='left', left_on='movie_id', right_on='movieId')
+    # df_user_ratings.sort_values(by='row_index', ascending=True, inplace=True)
+    # df_user_ratings.dropna(axis=0, inplace=True)
+    #
+    # movie_similarity_matrix = movie_similarity_matrix[:, df_user_ratings.row_index.astype('int')]
+    # movie_similarity_matrix = movie_similarity_matrix ** 2
+    # similarity_times_rating = np.dot(movie_similarity_matrix, df_user_ratings.rating)
+    # sum_similarities = movie_similarity_matrix.sum(axis=1)
+    #
+    # result = similarity_times_rating / sum_similarities
+    #
+    # df_rating_exp = pd.DataFrame({'rating_exp': result}).reset_index()
+    # # drop movies, which were already rated by the user
+    # df_rating_exp.drop(index=df_user_ratings.row_index.astype('int'), inplace=True)
+    # df_rating_exp.columns = ['row_index', 'rating_exp']
+    # df_rating_exp = df_rating_exp.merge(df_movie_index, how='left', on='row_index')
+    #
+    # df_rating_exp.sort_values(by='rating_exp', ascending=False, inplace=True)
+    #
+    # df_movies = pd.DataFrame(Movie.objects.filter(movieId__in=df_rating_exp.movieId).values())
+    #
+
+    return 0
+
+
+def suggested_movies(request):
+    method = request.GET.get('method', '')
+    nr_movies = 100
+    if method == 'movielen_rating':
+        rating_exp = get_top_movielen_movies(user=request.user, nr_movies=nr_movies)
+
+    if method == 'imdb_rating':
+        rating_exp = get_top_movies_imdb(user=request.user, nr_movies=nr_movies)
+
+    if method == 'similarity':
+        rating_exp = get_top_movies_similarity(user=request.user, nr_movies=nr_movies)
+
+    if method == 'mixed':
+        movies_similarity = get_top_movies_similarity(request.user)
+        movies_imdb = get_top_movies_imdb(request.user)
+        movies = pd.merge(movies_similarity, movies_imdb,
+                          how='inner', on='movieId')
+
+    movies = get_movies(rating_exp.movieId)
+    movies = movies.merge(rating_exp, how='inner', on='movieId')
+    movies.sort_values(by='rating_exp', ascending=False, inplace=True)
+
+    movies = movies[:20]
+    movies.fillna('', inplace=True)
+    print(movies)
     movies = movies.to_dict('records')
 
     return HttpResponse(json.dumps(movies), 'application/json')

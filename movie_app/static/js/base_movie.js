@@ -327,3 +327,50 @@ var movieSimilarityView = function(obj){
         "</div>"
     )
 };
+
+var getMovieSuggestions = function(method){
+
+    // load movie suggestions
+    $('#suggested_movie_loader').show();
+
+    $.ajax({
+        type: 'GET',
+        url: url_suggested_movies,
+        dataType: 'json',
+        cache: true,
+        data: {
+            'method': method,
+        },
+        success: function(data){
+            console.log(data);
+            var htmlString = ''
+            htmlString = "<div class='scrollmenu'>";
+            for(var i=0;i<data.length;i++){
+                obj = data[i];
+                htmlString += suggestedMovieView(obj);
+            }
+            htmlString +=   "</div>";
+            document.getElementById('suggested_movies_list').innerHTML = htmlString;
+
+            $('#suggested_movie_loader').hide();
+        },
+        error: function(e){
+            console.log(e)
+        }
+    });
+}
+
+
+var suggestedMovieView = function(obj){
+    return(
+        "<div class='similarity_class'>" +
+            "<div class ='row' style='background-color: #dee9fa'>" +
+                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
+                    obj.title +
+                "</div>" +
+            "</div>" +
+            "<p> Expected Rating: " + obj.rating_exp.toFixed(2) + "</p>" +
+            "<img src=" + obj.urlMoviePoster + " width='60%'>" +
+        "</div>"
+    )
+}
