@@ -70,8 +70,11 @@ def filter_movies_only_rated(user, only_rated_movies):
 def filter_movies_term(term):
     movie_ids = pd.DataFrame.from_records(
         Movie.objects.filter(title__contains=term).values('movieId')
-    ).movieId
-    return pd.Index(movie_ids)
+    )
+    # result is empty
+    if movie_ids.empty:
+        return pd.Index([])
+    return pd.Index(movie_ids.movieId)
 
 
 def filter_movies_genre(filter_genre):
@@ -144,6 +147,8 @@ def get_person_info(movie_ids):
                                                                         'person__last_name',
                                                                         'person__first_name')
     )
+    if person.empty:
+        return pd.DataFrame({'movieId': [], 'actor': [], 'director': [], 'writer': [], 'full_name': []})
     person.columns = ['movieId', 'role', 'last_name', 'first_name']
     person.replace(np.nan, '', inplace=True)
     person['full_name'] = person['first_name'] + ' ' + person['last_name']
