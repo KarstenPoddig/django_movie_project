@@ -369,7 +369,7 @@ var suggestedMovieView = function(obj){
                     obj.title +
                 "</div>" +
             "</div>" +
-            "<p> Expected Rating: " + obj.rating_exp.toFixed(2) + "</p>" +
+            "<p> Expected Rating: " + obj.rating_pred.toFixed(2) + "</p>" +
             "<img src=" + obj.urlMoviePoster + " width='60%'>" +
         "</div>"
     )
