@@ -22,10 +22,6 @@ class TestView(TemplateView):
     template_name = 'movie_app/test.html'
 
 
-class VueTestView(TemplateView):
-    template_name = 'movie_app/test_vue.html'
-
-
 class RatedMovies(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/rated_movies.html'
 
