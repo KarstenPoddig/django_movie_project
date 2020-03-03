@@ -51,28 +51,6 @@ def movie_search_short(request, only_rated_movies):
     return HttpResponse(data, mimetype)
 
 
-def filter_movies_only_rated(user, only_rated_movies):
-    if only_rated_movies:
-        movie_ids = pd.DataFrame.from_records(
-            Rating.objects.filter(user=user).values()
-        ).movie_id
-    else:
-        movie_ids = pd.DataFrame.from_records(
-            Movie.objects.all().values()
-        ).movieId
-    return pd.Index(movie_ids)
-
-
-def filter_movies_term(term):
-    movie_ids = pd.DataFrame.from_records(
-        Movie.objects.filter(title__contains=term).values('movieId')
-    )
-    # result is empty
-    if movie_ids.empty:
-        return pd.Index([])
-    return pd.Index(movie_ids.movieId)
-
-
 def filter_movies_genre(filter_genre):
     genres = filter_genre.split(',')
     if filter_genre == '':
@@ -115,63 +93,87 @@ def filter_movies_year(filter_year):
     return pd.Index(movie_ids)
 
 
-def get_movies(movie_ids):
-    movies = pd.DataFrame.from_records(
-        Movie.objects.filter(movieId__in=movie_ids).values()
-    )
-    if movies.empty:
-        movies = pd.DataFrame({'movieId': []})
-    return movies
-
-
-def get_genre_info(movie_ids):
-    genres = pd.DataFrame.from_records(
-        MovieGenre.objects.filter(movie__movieId__in=movie_ids).values('movie__movieId',
-                                                                       'genre__genre')
-    )
-    if genres.empty:
-        genres = pd.DataFrame({'movieId': [], 'genre': []})
-    genres.columns = ['movieId', 'genre']
-    genres = genres.groupby('movieId')['genre'].apply(', '.join).reset_index()
-    return genres
-
-
-def get_person_info(movie_ids):
-    person = pd.DataFrame.from_records(
-        MoviePerson.objects.filter(movie__movieId__in=movie_ids).values('movie__movieId',
-                                                                        'role__role',
-                                                                        'person__last_name',
-                                                                        'person__first_name')
-    )
-    if person.empty:
-        return pd.DataFrame({'movieId': [], 'actor': [], 'director': [], 'writer': [], 'full_name': []})
-    person.columns = ['movieId', 'role', 'last_name', 'first_name']
-    person.replace(np.nan, '', inplace=True)
-    person['full_name'] = person['first_name'] + ' ' + person['last_name']
-    person = person.groupby(['movieId', 'role'])['full_name'].apply(', '.join).reset_index()
-    person = person.pivot(index='movieId', columns='role',
-                          values='full_name').reset_index()
-    return person
-
-
-def get_rating_info(movie_ids, user):
-    if user.is_anonymous:
-        return pd.DataFrame({'movieId': [], 'rating': []})
-    ratings = pd.DataFrame.from_records(
-        Rating.objects.filter(movie__movieId__in=movie_ids,
-                              user=user).values('movie__movieId', 'rating')
-    )
-    if ratings.empty:
-        ratings = pd.DataFrame({'movieId': [], 'rating': []})
-    ratings.columns = ['movieId', 'rating']
-    return ratings
-
-
 def get_entries(nr_results_shown, nr_results_total, page_number):
     nr_entry_start = (page_number - 1) * nr_results_shown
     nr_entry_end = min(page_number * nr_results_shown, nr_results_total)
 
     return range(nr_entry_start, nr_entry_end)
+
+
+import time
+
+
+def get_genres(filter_genre):
+    if filter_genre == '':
+        ''
+    else:
+        filter_genre = filter_genre.split(',')
+        genre_list = "'" + filter_genre[0] + "'"
+        for genre in filter_genre[1:]:
+            genre_list = genre_list + ",'" + genre + "'"
+        print(genre_list)
+        return genre_list
+
+
+def query_all_movies(term, filter_genre, only_rated_movies, page_number,
+                     nr_results_shown, user_id):
+    query = open('movie_app/sql_query/template_query_all_movies.sql',
+                 'r', encoding='utf-8-sig').read()
+    # replacing term
+    query = query.replace('TERM', term.lower())
+
+    # replacing genres
+    if filter_genre != '':
+        genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
+                                'r', encoding='utf-8-sig').read()
+        query = query.replace('-- GENRE_FILTER', genre_filter_str)
+        genre_list = get_genres(filter_genre)
+        query = query.replace('GENRE_LIST', genre_list)
+
+    # adjust query, if just to show rated movies
+    if only_rated_movies == 1:
+        rating_filter_str = open('movie_app/sql_query/rated_filter.txt',
+                                 'r', encoding='utf-8-sig').read()
+        query = query.replace('-- RATED_FILTER', rating_filter_str)
+        query = query.replace('-- RATING_TABLE', ',public.movie_app_rating r')
+        query = query.replace('-- USER_ID', str(user_id))
+    else:
+        if user_id is None:
+            query = query.replace('-- USER_ID', '-1')
+        else:
+            query = query.replace('-- USER_ID', str(user_id))
+
+    # adjust offset and limit (to make the navigation possible)
+    query = query.replace('-- LIMIT', str(nr_results_shown))
+    query = query.replace('-- OFFSET', str((page_number - 1) * nr_results_shown))
+
+    return query
+
+
+def query_all_movies_nr_results(term, filter_genre, only_rated_movies, user_id):
+    query = open('movie_app/sql_query/template_query_all_movies_nr_results.sql',
+                 'r', encoding='utf-8-sig').read()
+    # replacing term
+    query = query.replace('TERM', term.lower())
+
+    if filter_genre != '':
+        genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
+                                'r', encoding='utf-8-sig').read()
+        query = query.replace('-- GENRE_FILTER', genre_filter_str)
+        genre_list = get_genres(filter_genre)
+        query = query.replace('GENRE_LIST', genre_list)
+
+    if only_rated_movies == 1:
+        rating_filter_str = open('movie_app/sql_query/rated_filter.txt',
+                                 'r', encoding='utf-8-sig').read()
+        query = query.replace('-- RATED_FILTER', rating_filter_str)
+        query = query.replace('-- RATING_TABLE', ',public.movie_app_rating r')
+        query = query.replace('-- USER_ID', str(user_id))
+
+    return query
+
+
+from django.db import connection
 
 
 def movie_search_long(request):
@@ -183,26 +185,26 @@ def movie_search_long(request):
     filter_year = request.GET.get('filter_year', '')
     page_number = int(request.GET.get('page_number', 10))
 
-    movie_ids_only_rated = filter_movies_only_rated(request.user, only_rated_movies)
-    movie_ids_term = filter_movies_term(term)
-    movie_ids_genre = filter_movies_genre(filter_genre)
-    movie_ids_year = filter_movies_year(filter_year)
+    cursor = connection.cursor()
+    # compute the total number of results
+    cursor.execute(query_all_movies_nr_results(term=term,
+                                               filter_genre=filter_genre,
+                                               only_rated_movies=only_rated_movies,
+                                               user_id=request.user.id))
+    nr_results_total = cursor.fetchone()[0]
+    # perform the actual query
+    cursor.execute(query_all_movies(term=term,
+                                    filter_genre=filter_genre,
+                                    only_rated_movies=only_rated_movies,
+                                    page_number=page_number,
+                                    nr_results_shown=nr_results_shown,
+                                    user_id=request.user.id))
+    movies = cursor.fetchall()
 
-    movie_ids = movie_ids_only_rated.intersection(movie_ids_term)
-    movie_ids = movie_ids.intersection(movie_ids_genre)
-    movie_ids = movie_ids.intersection(movie_ids_year)
-
-    nr_results_total = len(movie_ids)
-    entries = get_entries(nr_results_shown, nr_results_total, page_number)
-    movie_ids = movie_ids[entries]
-
-    movies = get_movies(movie_ids)
-    movies = movies.merge(get_genre_info(movie_ids),
-                          how='left', on='movieId')
-    movies = movies.merge(get_person_info(movie_ids),
-                          how='left', on='movieId')
-    movies = movies.merge(get_rating_info(movie_ids, request.user),
-                          how='left', on='movieId')
+    movies = pd.DataFrame(movies)
+    if not movies.empty:
+        movies.columns = ['movieId', 'title', 'year', 'production', 'country', 'urlMoviePoster',
+                          'imdbRating', 'actor', 'director', 'writer', 'rating', 'genre']
     movies.replace(np.nan, '', inplace=True)
     movies = movies.to_dict('records')
     output_dict = {'meta': {'nr_results_total': nr_results_total,
@@ -309,11 +311,10 @@ from movie_app.recommendation_models import load_data
 
 
 def get_top_movies_similarity(user, nr_movies):
-
     similarity_matrix = load_data.load_similarity_matrix()
-    similarity_matrix = similarity_matrix**2
+    similarity_matrix = similarity_matrix # ** 2
     movie_index = load_data.load_movie_index()
-    
+
     ratings_user = pd.DataFrame.from_records(
         Rating.objects.filter(user=user,
                               movie__movieId__in=movie_index.row_index).values()
@@ -326,13 +327,13 @@ def get_top_movies_similarity(user, nr_movies):
 
     # select only the relevant part of the similarity_matrix
     similarity_matrix = similarity_matrix[:, ratings_user.row_index]
-    nr_relev_movies = min(20, similarity_matrix.shape[1])
+    nr_relev_movies = min(10, similarity_matrix.shape[1])
     for i in range(similarity_matrix.shape[0]):
         row = similarity_matrix[i]
         similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
     sum_similarities = similarity_matrix.sum(axis=1)
 
-    rating_pred = np.dot(similarity_matrix, rating_vector)/sum_similarities
+    rating_pred = np.dot(similarity_matrix, rating_vector) / sum_similarities
 
     rating_pred = pd.DataFrame({'rating_pred': rating_pred})
     rating_pred.reset_index(inplace=True)
@@ -346,8 +347,17 @@ def get_top_movies_similarity(user, nr_movies):
     rating_pred = drop_rated_movies(rating_pred, user)
     rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
     rating_pred = rating_pred[:nr_movies]
-    
+
     return rating_pred
+
+
+def get_movies(movie_ids):
+    movies = pd.DataFrame.from_records(
+        Movie.objects.filter(movieId__in=movie_ids).values()
+    )
+    if movies.empty:
+        movies = pd.DataFrame({'movieId': []})
+    return movies
 
 
 def suggested_movies(request):

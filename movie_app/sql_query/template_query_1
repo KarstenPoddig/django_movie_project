@@ -1,0 +1,53 @@
+﻿select --movie information
+	m."movieId"
+	,m.title
+	,m."year"
+	,m.production
+	,m.country
+	,m."urlMoviePoster"
+	-- person information
+	--actor
+	,(select string_agg(p.first_name || ' '|| p.last_name, ', ')
+	   from public.movie_app_person p
+		,public.movie_app_movieperson mp
+	  where mp.movie_id = m."movieId"
+	    and p."personId" = mp.person_id
+	    and mp.role_id = 0) as actors
+	-- director
+	,(select string_agg(p.first_name || ' '|| p.last_name, ', ')
+	   from public.movie_app_person p
+		,public.movie_app_movieperson mp
+	  where mp.movie_id = m."movieId"
+	    and p."personId" = mp.person_id
+	    and mp.role_id = 1) as directors
+	-- writer
+	,(select string_agg(p.first_name || ' '|| p.last_name, ', ')
+	   from public.movie_app_person p
+		,public.movie_app_movieperson mp
+	  where mp.movie_id = m."movieId"
+	    and p."personId" = mp.person_id
+	    and mp.role_id = 2) as writers
+	-- rating
+	,(select max(r.rating) -- There should be only one rating, but to make sure to just return one value apply the max
+	    from public.movie_app_rating r
+	   where r.user_id = 162542 -- testuser
+	     and r.movie_id = m."movieId")
+	 -- genre
+	 ,(select string_agg(g.genre, ', ')
+	     from public.movie_app_genre g
+		 ,public.movie_app_moviegenre g
+	    where mg.movie_id = m."movieId"
+	      and mg.genre_id = g."genreId")
+
+
+
+from public.movie_app_movie m
+
+where 1=1
+  -- filtering for term
+  and lower(m.title) like '%%'
+  -- filtering for genre
+  and 
+
+offset 10
+limit 10

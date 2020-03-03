@@ -1,0 +1,2 @@
+  and r.movie_id = m."movieId"
+  and r.user_id = -- USER_ID

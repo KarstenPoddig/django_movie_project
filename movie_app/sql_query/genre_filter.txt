@@ -1,0 +1,7 @@
+and m."movieId" in (select m2."movieId"
+			from public.movie_app_movie m2
+			     ,public.movie_app_genre g2
+			     ,public.movie_app_moviegenre mg2
+		       where m2."movieId" = mg2.movie_id
+		         and mg2.genre_id = g2."genreId"
+		         and g2.genre in (GENRE_LIST))

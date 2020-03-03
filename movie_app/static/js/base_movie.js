@@ -131,6 +131,8 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
             // disable loading symbol
             $('#movie_loader').hide();
 
+            console.log(data)
+
             // create navigation area
             result_nav_elem_top.innerHTML = createResultNavHTML(data['meta'])
             result_nav_elem_bottom.innerHTML = result_nav_area_top.innerHTML;

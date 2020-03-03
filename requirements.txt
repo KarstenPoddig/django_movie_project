@@ -7,3 +7,7 @@ sklearn
 matplotlib
 
 scikit-surprise
+
+wheel
+gunicorn
+psycopg2

@@ -14,6 +14,7 @@ class Movie(models.Model):
     country = models.CharField(max_length=100, blank=True, null=True)
     imdbRating = models.FloatField(blank=True, null=True)
     urlMoviePoster = models.CharField(max_length=200, null=True, default=None)
+    nrRatings = models.IntegerField(null=True)
 
     def __str__(self):
         return self.title
