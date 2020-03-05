@@ -11,3 +11,5 @@ scikit-surprise
 wheel
 gunicorn
 psycopg2
+
+tensorflow

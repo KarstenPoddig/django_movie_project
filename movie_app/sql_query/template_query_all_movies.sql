@@ -51,10 +51,8 @@ where 1=1
   and lower(m.title) like '%TERM%'
   -- filtering genre
   -- GENRE_FILTER
-  -- YEAR_FILTER
   -- RATED_FILTER
   -- YEAR_FILTER
-  --and m.year in (1995,1994,2001,2002,2003) -- YEAR_LIST
 
 
 order by m."nrRatings" desc

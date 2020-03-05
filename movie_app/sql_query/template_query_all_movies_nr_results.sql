@@ -11,4 +11,3 @@ where 1=1
   -- GENRE_FILTER
   -- RATED_FILTER
   -- YEAR_FILTER
-  --and m.year in (1995,1994,2001,2002,2003) -- YEAR_LIST

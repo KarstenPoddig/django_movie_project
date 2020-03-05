@@ -7,6 +7,8 @@ import pandas as pd
 from movie_app.models import Genre, MovieGenre, MoviePerson, Role, Person, MoviesSimilar
 import numpy as np
 from django.db.models import Count, Avg
+from django.db import connection
+from movie_app.recommendation_models import load_data
 import requests
 
 
@@ -51,27 +53,19 @@ def movie_search_short(request, only_rated_movies):
     return HttpResponse(data, mimetype)
 
 
-def filter_movies_genre(filter_genre):
-    genres = filter_genre.split(',')
-    if filter_genre == '':
-        movie_ids = pd.DataFrame.from_records(
-            Movie.objects.all().values()
-        ).movieId
-    else:
-        movie_ids = pd.DataFrame.from_records(
-            MovieGenre.objects.filter(genre__genre__in=genres).values()
-        ).movie_id
-    return pd.Index(movie_ids)
+def get_entries(nr_results_shown, nr_results_total, page_number):
+    nr_entry_start = (page_number - 1) * nr_results_shown
+    nr_entry_end = min(page_number * nr_results_shown, nr_results_total)
+
+    return range(nr_entry_start, nr_entry_end)
 
 
-def filter_movies_year(filter_year):
-    years = filter_year.split(',')
+def get_year_filter_str(filter_year):
     if filter_year == '':
-        movie_ids = pd.DataFrame.from_records(
-            Movie.objects.all().values()
-        ).movieId
+        return ''
     else:
         years_list = list()
+        years = filter_year.split(',')
         if '1950s and earlier' in years:
             years_list += list(range(1874, 1960))
         if '1960s' in years:
@@ -86,26 +80,12 @@ def filter_movies_year(filter_year):
             years_list += list(range(2000, 2010))
         if '2010s' in years:
             years_list += list(range(2010, 2020))
-        movie_ids = pd.DataFrame.from_records(
-            Movie.objects.filter(year__in=years_list).values()
-        ).movieId
-
-    return pd.Index(movie_ids)
+        return ','.join(str(year) for year in years_list)
 
 
-def get_entries(nr_results_shown, nr_results_total, page_number):
-    nr_entry_start = (page_number - 1) * nr_results_shown
-    nr_entry_end = min(page_number * nr_results_shown, nr_results_total)
-
-    return range(nr_entry_start, nr_entry_end)
-
-
-import time
-
-
-def get_genres(filter_genre):
+def get_genre_filter_str(filter_genre):
     if filter_genre == '':
-        ''
+        return ''
     else:
         filter_genre = filter_genre.split(',')
         genre_list = "'" + filter_genre[0] + "'"
@@ -115,8 +95,8 @@ def get_genres(filter_genre):
         return genre_list
 
 
-def query_all_movies(term, filter_genre, only_rated_movies, page_number,
-                     nr_results_shown, user_id):
+def query_all_movies(term, filter_genre, filter_year, only_rated_movies,
+                     page_number, nr_results_shown, user_id):
     query = open('movie_app/sql_query/template_query_all_movies.sql',
                  'r', encoding='utf-8-sig').read()
     # replacing term
@@ -127,7 +107,7 @@ def query_all_movies(term, filter_genre, only_rated_movies, page_number,
         genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
                                 'r', encoding='utf-8-sig').read()
         query = query.replace('-- GENRE_FILTER', genre_filter_str)
-        genre_list = get_genres(filter_genre)
+        genre_list = get_genre_filter_str(filter_genre)
         query = query.replace('GENRE_LIST', genre_list)
 
     # adjust query, if just to show rated movies
@@ -143,26 +123,36 @@ def query_all_movies(term, filter_genre, only_rated_movies, page_number,
         else:
             query = query.replace('-- USER_ID', str(user_id))
 
+    # filter year
+    if filter_year != '':
+        filter_year_str = open('movie_app/sql_query/year_filter.txt',
+                               'r', encoding='utf-8-sig').read()
+        query = query.replace('-- YEAR_FILTER', filter_year_str)
+        year_list = get_year_filter_str(filter_year)
+        query = query.replace('YEAR_LIST', year_list)
+
     # adjust offset and limit (to make the navigation possible)
     query = query.replace('-- LIMIT', str(nr_results_shown))
     query = query.replace('-- OFFSET', str((page_number - 1) * nr_results_shown))
-
     return query
 
 
-def query_all_movies_nr_results(term, filter_genre, only_rated_movies, user_id):
+def query_all_movies_nr_results(term, filter_genre, filter_year,
+                                only_rated_movies, user_id):
     query = open('movie_app/sql_query/template_query_all_movies_nr_results.sql',
                  'r', encoding='utf-8-sig').read()
     # replacing term
     query = query.replace('TERM', term.lower())
 
+    # replacing genres
     if filter_genre != '':
         genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
                                 'r', encoding='utf-8-sig').read()
         query = query.replace('-- GENRE_FILTER', genre_filter_str)
-        genre_list = get_genres(filter_genre)
+        genre_list = get_genre_filter_str(filter_genre)
         query = query.replace('GENRE_LIST', genre_list)
 
+    # adjust query, if just to show rated movies
     if only_rated_movies == 1:
         rating_filter_str = open('movie_app/sql_query/rated_filter.txt',
                                  'r', encoding='utf-8-sig').read()
@@ -170,10 +160,15 @@ def query_all_movies_nr_results(term, filter_genre, only_rated_movies, user_id):
         query = query.replace('-- RATING_TABLE', ',public.movie_app_rating r')
         query = query.replace('-- USER_ID', str(user_id))
 
+    # filter year
+    if filter_year != '':
+        filter_year_str = open('movie_app/sql_query/year_filter.txt',
+                               'r', encoding='utf-8-sig').read()
+        query = query.replace('-- YEAR_FILTER', filter_year_str)
+        year_list = get_year_filter_str(filter_year)
+        query = query.replace('YEAR_LIST', year_list)
+
     return query
-
-
-from django.db import connection
 
 
 def movie_search_long(request):
@@ -189,19 +184,22 @@ def movie_search_long(request):
     # compute the total number of results
     cursor.execute(query_all_movies_nr_results(term=term,
                                                filter_genre=filter_genre,
+                                               filter_year=filter_year,
                                                only_rated_movies=only_rated_movies,
                                                user_id=request.user.id))
     nr_results_total = cursor.fetchone()[0]
     # perform the actual query
     cursor.execute(query_all_movies(term=term,
                                     filter_genre=filter_genre,
+                                    filter_year=filter_year,
                                     only_rated_movies=only_rated_movies,
                                     page_number=page_number,
                                     nr_results_shown=nr_results_shown,
                                     user_id=request.user.id))
     movies = cursor.fetchall()
-
     movies = pd.DataFrame(movies)
+
+    # if result is not empty rename the columns
     if not movies.empty:
         movies.columns = ['movieId', 'title', 'year', 'production', 'country', 'urlMoviePoster',
                           'imdbRating', 'actor', 'director', 'writer', 'rating', 'genre']
@@ -261,8 +259,10 @@ class SuggestionView(TemplateView):
 def similar_movies(request):
     movieId = int(request.GET.get('movieId', ''))
 
-    movie_similarity_matrix = np.load('Analysen/rating_matrix/movie_similarity_matrix_final.npy')
-    df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
+    movie_similarity_matrix = load_data.load_similarity_matrix()
+    # movie_similarity_matrix = np.load('Analysen/rating_matrix/movie_similarity_matrix_final.npy')
+    df_movie_index = load_data.load_movie_index()
+    # df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
     df_similarity = df_movie_index
     df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
     # movie is not contained in similarity matrix
@@ -307,7 +307,7 @@ def get_top_movies_imdb(user, nr_movies):
     return movies
 
 
-from movie_app.recommendation_models import load_data
+
 
 
 def get_top_movies_similarity(user, nr_movies):
