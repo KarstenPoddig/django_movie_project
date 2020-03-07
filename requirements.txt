@@ -4,12 +4,6 @@ pandas
 requests
 scipy
 sklearn
-matplotlib
-
-scikit-surprise
-
 wheel
 gunicorn
 psycopg2
-
-tensorflow
