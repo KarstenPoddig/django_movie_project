@@ -26,15 +26,15 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: movie_app
+  name: movie-app
   labels:
-    app: movie_app
+    app: movie-app
 spec:
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
-        app: movie_app
+        app: movie-app
     spec:
       containers:
       - name: movie-app
@@ -64,7 +64,7 @@ spec:
       - image: gcr.io/cloudsql-docker/gce-proxy:1.16
         name: cloudsql-proxy
         command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=<your-cloudsql-connection-string>=tcp:5432",
+                  "-instances=kp-test-project-2:europe-west3-a:django-db=tcp:5432",
                   "-credential_file=/secrets/cloudsql/credentials.json"]
         volumeMounts:
           - name: cloudsql-oauth-credentials
@@ -101,14 +101,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: movie_app
+  name: movie-app
   labels:
-    app: movie_app
+    app: movie-app
 spec:
   type: LoadBalancer
   ports:
   - port: 80
     targetPort: 8080
   selector:
-    app: movie_app
+    app: movie-app
 # [END service]
