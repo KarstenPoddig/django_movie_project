@@ -26,15 +26,15 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: movie_app
+  name: movie-app
   labels:
-    app: movie_app
+    app: movie-app
 spec:
   replicas: 3
   template:
     metadata:
       labels:
-        app: movie_app
+        app: movie-app
     spec:
       containers:
       - name: movie-app
@@ -101,14 +101,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: movie_app
+  name: movie-app
   labels:
-    app: movie_app
+    app: movie-app
 spec:
   type: LoadBalancer
   ports:
   - port: 80
     targetPort: 8080
   selector:
-    app: movie_app
+    app: movie-app
 # [END service]

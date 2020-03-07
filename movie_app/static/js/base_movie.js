@@ -267,12 +267,10 @@ var movieViewDetailed = function(obj){
                     obj.title +
                 "</div>" +
             "</div>" +
-            "<div class='row'>" +
-                "<div class='col-sm-2'>" +
-                    "<div class='movie_poster' id='poster_" + obj.movieId + "'>" +
-                    "</div>" +
-                    "<img src='" + obj.urlMoviePoster + "' width='60%'>" +
-                "</div>" +
+            "<div class='row' style='padding-top: 5px; padding: 5px;'>" +
+//                "<div class='movie_poster' id='poster_" + obj.movieId + "'>" +
+//                "</div>" +
+                "<img src='" + obj.urlMoviePoster + "' height=200px>" +
                 "<div class='col-sm-6'>" +
                     "<p>" + obj.year + ", " +
                             obj.country + ", " +
