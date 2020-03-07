@@ -307,18 +307,19 @@ def get_top_movies_imdb(user, nr_movies):
     return movies
 
 
-
-
-
 def get_top_movies_similarity(user, nr_movies):
     similarity_matrix = load_data.load_similarity_matrix()
-    similarity_matrix = similarity_matrix # ** 2
+    similarity_matrix = similarity_matrix
     movie_index = load_data.load_movie_index()
 
     ratings_user = pd.DataFrame.from_records(
         Rating.objects.filter(user=user,
-                              movie__movieId__in=movie_index.row_index).values()
+                              movie__movieId__in=movie_index.movieId).values()
     )
+    # if no ratings were found -> return empty DataFrame
+    if ratings_user.empty:
+        return pd.DataFrame({'movieId': [], 'rating_pred': []})
+
     ratings_user = ratings_user.merge(movie_index, how='inner',
                                       left_on='movie_id', right_on='movieId')
 
@@ -327,7 +328,7 @@ def get_top_movies_similarity(user, nr_movies):
 
     # select only the relevant part of the similarity_matrix
     similarity_matrix = similarity_matrix[:, ratings_user.row_index]
-    nr_relev_movies = min(10, similarity_matrix.shape[1])
+    nr_relev_movies = min(15, similarity_matrix.shape[1])
     for i in range(similarity_matrix.shape[0]):
         row = similarity_matrix[i]
         similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
@@ -384,7 +385,6 @@ def suggested_movies(request):
 
     movies = movies[:20]
     movies.fillna('', inplace=True)
-    print(movies)
     movies = movies.to_dict('records')
 
     return HttpResponse(json.dumps(movies), 'application/json')
