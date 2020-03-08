@@ -268,8 +268,6 @@ var movieViewDetailed = function(obj){
                 "</div>" +
             "</div>" +
             "<div class='row' style='padding-top: 5px; padding: 5px;'>" +
-//                "<div class='movie_poster' id='poster_" + obj.movieId + "'>" +
-//                "</div>" +
                 "<img src='" + obj.urlMoviePoster + "' height=200px>" +
                 "<div class='col-sm-6'>" +
                     "<p>" + obj.year + ", " +
@@ -293,7 +291,8 @@ var movieViewDetailed = function(obj){
 var getSimilarMovies = function(movieId){
 
     // load similar movies
-    $('#similar_movie_loader').show()
+    $('#similar_movie_loader').show();
+    document.getElementById('similarity_list').innerHTML = '';
 
     $.getJSON(url_similar_movies,
         {'movieId': movieId},
