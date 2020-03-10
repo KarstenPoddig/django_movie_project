@@ -332,22 +332,24 @@ def get_top_movies_similarity(user, nr_movies):
     for i in range(similarity_matrix.shape[0]):
         row = similarity_matrix[i]
         similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
+    score = np.dot(similarity_matrix, rating_vector)
     sum_similarities = similarity_matrix.sum(axis=1)
+    rating_pred = score / sum_similarities
 
-    rating_pred = np.dot(similarity_matrix, rating_vector) / sum_similarities
-
-    rating_pred = pd.DataFrame({'rating_pred': rating_pred})
+    rating_pred = pd.DataFrame({'rating_pred': rating_pred,
+                                'score': score})
     rating_pred.reset_index(inplace=True)
-    rating_pred.columns = ['row_index', 'rating_pred']
+    rating_pred.columns = ['row_index', 'rating_pred', 'score']
 
     rating_pred = movie_index.merge(rating_pred, on='row_index',
                                     how='inner')
-    rating_pred = rating_pred[['movieId', 'rating_pred']]
+    rating_pred = rating_pred[['movieId', 'rating_pred', 'score']]
 
     # drop movies already rated
     rating_pred = drop_rated_movies(rating_pred, user)
-    rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
+    rating_pred.sort_values(by='score', ascending=False, inplace=True)
     rating_pred = rating_pred[:nr_movies]
+    rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
 
     return rating_pred
 
