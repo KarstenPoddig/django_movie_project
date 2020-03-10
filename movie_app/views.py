@@ -19,11 +19,6 @@ class HomeView(TemplateView):
     template_name = 'movie_app/home.html'
 
 
-class TestView(TemplateView):
-    """View to test functionalities"""
-    template_name = 'movie_app/test.html'
-
-
 class RatedMovies(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/rated_movies.html'
 
