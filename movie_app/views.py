@@ -4,7 +4,6 @@ from django.http import HttpResponse
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
 import pandas as pd
-from movie_app.models import Genre, MovieGenre, MoviePerson, Role, Person, MoviesSimilar
 import numpy as np
 from django.db.models import Count, Avg
 from django.db import connection
@@ -28,6 +27,7 @@ class AllMovies(TemplateView):
 
 
 def movie_search_short(request, only_rated_movies):
+    """This function is used for the autocompletion in the movie search fields"""
     if request.is_ajax():
         q = request.GET.get('term', '')
         if only_rated_movies:
@@ -48,11 +48,42 @@ def movie_search_short(request, only_rated_movies):
     return HttpResponse(data, mimetype)
 
 
-def get_entries(nr_results_shown, nr_results_total, page_number):
-    nr_entry_start = (page_number - 1) * nr_results_shown
-    nr_entry_end = min(page_number * nr_results_shown, nr_results_total)
+"""
+############## Movie Querys ########################################################
 
-    return range(nr_entry_start, nr_entry_end)
+The tabs "All Movies" and "Rated Movies" contains detailed information of the
+listed movies from several tables (movie, genre, actors, ratings, etc.)
+To collect these informations several join and filter operations are necessary.
+Therefore, instead of using the Django ORM, a query is built with the functions 
+    - build_movie_query
+    - get_nr_results_movie_query
+    - get_year_filter_str
+    - get_genre_filter_str.
+Afterwards the generated query is executed directly on the database.
+
+There are several building blocks in the path 'movie_app/sql_query/' with which
+the final query is generated. These building blocks contain placeholders which are
+replaced with variables (input of build_movie_query).
+
+The tabs "All Movies" and "Rated Movies" contain the functionality to restrict
+the query results to certain genres, production years or just to show rated movies.
+The regarding code in the WHERE-clause is contained in the files
+    - movie_app/sql_query/year_filter.txt
+    - movie_app/sql_query/genre_filter.txt
+    - movie_app/sql_query/rated_filter.txt
+
+The functions build_movie_query and get_nr_results_movie_query adds the regarding
+code if actual restrictions are active.
+
+The function get_nr_results_movie_query is somehow redundant, because one could only
+run the function build_movie_query and count the results. But in this situation a lot
+of data would be passed (thousands of movies).
+Instead the movie query is executed for collecting the information on each page.
+To compute the total number of pages of results (i.e. when movies with a certain term 
+or movies of a certain genre are searched) get_nr_results_movie_query is used,
+
+#####################################################################################
+"""
 
 
 def get_year_filter_str(filter_year):
@@ -90,8 +121,8 @@ def get_genre_filter_str(filter_genre):
         return genre_list
 
 
-def query_all_movies(term, filter_genre, filter_year, only_rated_movies,
-                     page_number, nr_results_shown, user_id):
+def build_movie_query(term, filter_genre, filter_year, only_rated_movies,
+                      page_number, nr_results_shown, user_id):
     query = open('movie_app/sql_query/template_query_all_movies.sql',
                  'r', encoding='utf-8-sig').read()
     # replacing term
@@ -132,8 +163,8 @@ def query_all_movies(term, filter_genre, filter_year, only_rated_movies,
     return query
 
 
-def query_all_movies_nr_results(term, filter_genre, filter_year,
-                                only_rated_movies, user_id):
+def get_nr_results_movie_query(term, filter_genre, filter_year,
+                               only_rated_movies, user_id):
     query = open('movie_app/sql_query/template_query_all_movies_nr_results.sql',
                  'r', encoding='utf-8-sig').read()
     # replacing term
@@ -167,6 +198,9 @@ def query_all_movies_nr_results(term, filter_genre, filter_year,
 
 
 def movie_search_long(request):
+    """This function collects the movie information for the tabs
+     "All Movies" and "Rated Movies" and returns it as json"""
+
     # Preprocessing: reading the parameters from the request
     term = request.GET.get('term', '')
     only_rated_movies = int(request.GET.get('only_rated_movies', 0))
@@ -177,20 +211,20 @@ def movie_search_long(request):
 
     cursor = connection.cursor()
     # compute the total number of results
-    cursor.execute(query_all_movies_nr_results(term=term,
-                                               filter_genre=filter_genre,
-                                               filter_year=filter_year,
-                                               only_rated_movies=only_rated_movies,
-                                               user_id=request.user.id))
+    cursor.execute(get_nr_results_movie_query(term=term,
+                                              filter_genre=filter_genre,
+                                              filter_year=filter_year,
+                                              only_rated_movies=only_rated_movies,
+                                              user_id=request.user.id))
     nr_results_total = cursor.fetchone()[0]
     # perform the actual query
-    cursor.execute(query_all_movies(term=term,
-                                    filter_genre=filter_genre,
-                                    filter_year=filter_year,
-                                    only_rated_movies=only_rated_movies,
-                                    page_number=page_number,
-                                    nr_results_shown=nr_results_shown,
-                                    user_id=request.user.id))
+    cursor.execute(build_movie_query(term=term,
+                                     filter_genre=filter_genre,
+                                     filter_year=filter_year,
+                                     only_rated_movies=only_rated_movies,
+                                     page_number=page_number,
+                                     nr_results_shown=nr_results_shown,
+                                     user_id=request.user.id))
     movies = cursor.fetchall()
     movies = pd.DataFrame(movies)
 
@@ -209,11 +243,15 @@ def movie_search_long(request):
 
 
 def rate_movie(request):
+    """This function is used to set ratings of movies"""
+
+    # Preprocessing: reading parameters from the request
     movieId = request.POST.get('movieId')
     rating = float(request.POST.get('rating'))
 
     ratings = Rating.objects.filter(user=request.user,
                                     movie__movieId=movieId)
+
     # rating of 0 is interpreted as no rating
     if rating == 0:
         # one entry exists -> delete this entry
@@ -244,7 +282,27 @@ def rate_movie(request):
 
 
 class Analysis(TemplateView):
+    """This view is the template class for the Analys site. This site
+    contains statistical summaries."""
     template_name = 'movie_app/analysis.html'
+
+"""
+################# Movie Suggestions ##############################################
+
+The class SuggestionView is the frame for the tab "Movie Suggestions".
+
+It contains the secions
+- Movie Suggestions
+- Similar Movies
+
+The information in each section are passed through the functions
+    - suggested_movies
+    -  
+in the json format.
+
+##################################################################################
+
+"""
 
 
 class SuggestionView(TemplateView):
@@ -255,9 +313,7 @@ def similar_movies(request):
     movieId = int(request.GET.get('movieId', ''))
 
     movie_similarity_matrix = load_data.load_similarity_matrix()
-    # movie_similarity_matrix = np.load('Analysen/rating_matrix/movie_similarity_matrix_final.npy')
     df_movie_index = load_data.load_movie_index()
-    # df_movie_index = pd.read_csv('Analysen/rating_matrix/movie_index.csv')
     df_similarity = df_movie_index
     df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
     # movie is not contained in similarity matrix
