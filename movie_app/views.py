@@ -11,6 +11,40 @@ from movie_app.recommendation_models import load_data
 import requests
 
 
+"""
+################### General comments ##############################################
+
+the frame for the pages are the classes
+    - HomeView ->       http://.../movie_app/
+    - RatedMovies ->    http://.../movie_app/rated_movies/
+    - AllMovies ->      http://.../movie_app/movies/
+    - SuggestionView -> http://.../movie_app/suggestions/
+    - AnalysisView ->   http://.../movie_app/analysis/
+(see the file urls.py)
+
+
+Philosophy / Architecture:
+
+These classes are just empty cases. The actual contents are loaded through 
+jquery-requests, which then call the functions
+    - movie_search_short
+    - movie_search_long
+    - rate_movie
+    - similar_movies
+    - suggested_movies 
+(see the file urls.py)
+These functions then return data (based on the request) in json format. 
+Afterwards the passed data again is processed and shown with javascript.
+
+The purpose of this architecture is to make the pages more dynamic (-> single
+page applications). (i.e. updating only certain parts of the pages)
+Otherwise the page would need to be reloaded completely and therefore be less 
+dynamic.
+
+###################################################################################
+"""
+
+
 # Create your views here.
 
 class HomeView(TemplateView):
@@ -51,9 +85,9 @@ def movie_search_short(request, only_rated_movies):
 """
 ############## Movie Querys ########################################################
 
-The tabs "All Movies" and "Rated Movies" contains detailed information of the
-listed movies from several tables (movie, genre, actors, ratings, etc.)
-To collect these informations several join and filter operations are necessary.
+The tabs "All Movies" and "Rated Movies" contain detailed information of the
+listed movies from several tables in the database (movie, genre, actors, ratings, 
+etc.). To collect these informations several join and filter operations are necessary.
 Therefore, instead of using the Django ORM, a query is built with the functions 
     - build_movie_query
     - get_nr_results_movie_query
@@ -63,11 +97,11 @@ Afterwards the generated query is executed directly on the database.
 
 There are several building blocks in the path 'movie_app/sql_query/' with which
 the final query is generated. These building blocks contain placeholders which are
-replaced with variables (input of build_movie_query).
+replaced with variables (input of build_movie_query, like LIMIT, TERM, etc.).
 
 The tabs "All Movies" and "Rated Movies" contain the functionality to restrict
 the query results to certain genres, production years or just to show rated movies.
-The regarding code in the WHERE-clause is contained in the files
+The regarding code in the WHERE-clause of the final query is contained in the files
     - movie_app/sql_query/year_filter.txt
     - movie_app/sql_query/genre_filter.txt
     - movie_app/sql_query/rated_filter.txt
@@ -78,9 +112,11 @@ code if actual restrictions are active.
 The function get_nr_results_movie_query is somehow redundant, because one could only
 run the function build_movie_query and count the results. But in this situation a lot
 of data would be passed (thousands of movies).
-Instead the movie query is executed for collecting the information on each page.
+Instead the movie query is executed for collecting only the information on each page.
 To compute the total number of pages of results (i.e. when movies with a certain term 
-or movies of a certain genre are searched) get_nr_results_movie_query is used,
+or movies of a certain genre are searched) get_nr_results_movie_query is used, so 
+that the total number of pages of the result can be computed (to navigate through 
+the query results).
 
 #####################################################################################
 """
@@ -286,6 +322,7 @@ class Analysis(TemplateView):
     contains statistical summaries."""
     template_name = 'movie_app/analysis.html'
 
+
 """
 ################# Movie Suggestions ##############################################
 
@@ -295,13 +332,27 @@ It contains the secions
 - Movie Suggestions
 - Similar Movies
 
-The information in each section are passed through the functions
-    - suggested_movies
-    -  
-in the json format.
+# Movie Suggestions
+
+If a logged in user opens the page "Movie Suggestions" a javascript routine calls
+the url suggested_movies and consequently the function "suggested_movies" (in 
+this file). The result is returned in json format.
+Depending on the input this function returns a list of suggested movies. There 
+are several ways how the suggested movies are determined:
+    - top movies based on the Movielen ratings (and therefore on this app)
+    - top movies based on the imdb rating
+    - personal recommendation: movies based on the similarity and ratings 
+      of the regarding user. For the explanation of the algorithm  take a look 
+      at the README-file (or documentation)
+
+
+# Similar Movies
+
+If the user enters a Movie in the search field a javascript routine calls the 
+function "similar_movies". This function loads the similarity matrix and finds 
+the most similar movies. The result is returned in json format.
 
 ##################################################################################
-
 """
 
 
