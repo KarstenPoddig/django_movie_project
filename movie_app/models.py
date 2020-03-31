@@ -79,6 +79,7 @@ class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     movie = models.ForeignKey('Movie', on_delete=models.SET_NULL, null=True)
     rating = models.FloatField()
+    cluster = models.IntegerField(null=True)
 
 
 class MoviesSimilar(models.Model):
