@@ -475,7 +475,10 @@ def suggested_movies(request):
         rating_pred = get_top_movies_imdb(user=request.user, nr_movies=nr_movies)
 
     if method == 'similarity':
-        rating_pred = get_top_movies_similarity(user=request.user, nr_movies=nr_movies)
+        rated_movies = pd.DataFrame.from_records(
+            Rating.objects.filter(user=request.user).values('movie_id', 'rating')
+        )
+        rating_pred = get_top_movies_similarity(rated_movies, nr_movies=nr_movies)
 
     if method == 'mixed':
         movies_similarity = get_top_movies_similarity(request.user)
@@ -492,3 +495,21 @@ def suggested_movies(request):
     movies = movies.to_dict('records')
 
     return HttpResponse(json.dumps(movies), 'application/json')
+
+
+def suggestions_for_cluster(request):
+    user = request.user
+
+    rated_movies = pd.DataFrame.from_records(
+        Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster')
+    )
+    if rated_movies.empty:
+        return HttpResponse(json.dumps({}), 'application/json')
+    # get unique clusters (besides of not clustered movies)
+    clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
+    for cluster in clusters:
+        rated_movies_cluster = rated_movies[rated_movies.cluster == cluster]
+        suggested_movies_cluster = get_top_movies_similarity(rated_movies_cluster[['movie_id', 'rating']])
+
+
+    return HttpResponse(json.dumps({}), 'application/json')
