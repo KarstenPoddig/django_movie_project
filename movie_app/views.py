@@ -380,10 +380,7 @@ def similar_movies(request):
     return HttpResponse(json.dumps(movies), 'application/json')
 
 
-def drop_rated_movies(movies, user):
-    rated_movies = pd.DataFrame.from_records(
-        Rating.objects.filter(user=user).values()
-    )
+def drop_rated_movies(movies, rated_movies):
     movies = movies[~movies.movieId.isin(rated_movies.movie_id)]
     return movies
 
@@ -409,27 +406,19 @@ def get_top_movies_imdb(user, nr_movies):
     return movies
 
 
-def get_top_movies_similarity(user, nr_movies):
+def get_top_movies_similarity(rated_movies, nr_movies):
     similarity_matrix = load_data.load_similarity_matrix()
     similarity_matrix = similarity_matrix
     movie_index = load_data.load_movie_index()
 
-    ratings_user = pd.DataFrame.from_records(
-        Rating.objects.filter(user=user,
-                              movie__movieId__in=movie_index.movieId).values()
-    )
-    # if no ratings were found -> return empty DataFrame
-    if ratings_user.empty:
-        return pd.DataFrame({'movieId': [], 'rating_pred': []})
-
-    ratings_user = ratings_user.merge(movie_index, how='inner',
+    rated_movies = rated_movies.merge(movie_index, how='inner',
                                       left_on='movie_id', right_on='movieId')
 
     # build rating vector
-    rating_vector = np.array(ratings_user.rating)
+    rating_vector = np.array(rated_movies.rating)
 
     # select only the relevant part of the similarity_matrix
-    similarity_matrix = similarity_matrix[:, ratings_user.row_index]
+    similarity_matrix = similarity_matrix[:, rated_movies.row_index]
     nr_relev_movies = min(15, similarity_matrix.shape[1])
     for i in range(similarity_matrix.shape[0]):
         row = similarity_matrix[i]
@@ -448,7 +437,7 @@ def get_top_movies_similarity(user, nr_movies):
     rating_pred = rating_pred[['movieId', 'rating_pred', 'score']]
 
     # drop movies already rated
-    rating_pred = drop_rated_movies(rating_pred, user)
+    rating_pred = drop_rated_movies(rating_pred, rated_movies)
     rating_pred.sort_values(by='score', ascending=False, inplace=True)
     rating_pred = rating_pred[:nr_movies]
     rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
@@ -497,7 +486,7 @@ def suggested_movies(request):
     return HttpResponse(json.dumps(movies), 'application/json')
 
 
-def suggestions_for_cluster(request):
+def suggested_movies_cluster(request):
     user = request.user
 
     rated_movies = pd.DataFrame.from_records(
@@ -507,9 +496,17 @@ def suggestions_for_cluster(request):
         return HttpResponse(json.dumps({}), 'application/json')
     # get unique clusters (besides of not clustered movies)
     clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
+    suggested_movies_cluster = {}
     for cluster in clusters:
+        cluster = int(cluster)
         rated_movies_cluster = rated_movies[rated_movies.cluster == cluster]
-        suggested_movies_cluster = get_top_movies_similarity(rated_movies_cluster[['movie_id', 'rating']])
-
-
-    return HttpResponse(json.dumps({}), 'application/json')
+        rating_pred_user = get_top_movies_similarity(rated_movies_cluster[['movie_id', 'rating']], nr_movies=100)
+        movies_cluster = get_movies(rating_pred_user.movieId)
+        movies_cluster = movies_cluster.merge(rating_pred_user, how='inner', on='movieId')
+        movies_cluster.sort_values(by='rating_pred', ascending=False, inplace=True)
+        movies_cluster = movies_cluster[:20]
+        movies_cluster.fillna('', inplace=True)
+        movies_cluster.to_dict('records')
+        movies_cluster = movies_cluster.to_dict('records')
+        suggested_movies_cluster[cluster] = movies_cluster
+    return HttpResponse(json.dumps(suggested_movies_cluster), 'application/json')

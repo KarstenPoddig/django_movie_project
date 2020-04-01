@@ -373,3 +373,16 @@ var suggestedMovieView = function(obj){
         "</div>"
     )
 }
+
+var getMovieSuggestionsCluster = function(){
+
+    $.ajax({
+        type: 'GET',
+        url: url_suggested_movies_cluster,
+        dataType: 'json',
+        cache: true,
+        success: function(data){
+            console.log(data)
+        }
+    });
+}

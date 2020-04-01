@@ -12,4 +12,5 @@ urlpatterns = [
     path('suggestions/', views.SuggestionView.as_view(), name='suggestions'),
     path('similar_movies/', views.similar_movies, name='similar-movies'),
     path('suggested_movies/', views.suggested_movies, name='suggested-movies'),
+    path('suggested_movies_cluster/', views.suggested_movies_cluster, name='suggested-movies-cluster'),
 ]
