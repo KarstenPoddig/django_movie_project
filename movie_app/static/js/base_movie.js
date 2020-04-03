@@ -259,7 +259,6 @@ var getSingleMovie = function(search_elem, result_elem){
 
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
 var movieViewDetailed = function(obj){
-
     return (
         "<div class='movie_class' id=" + obj.movieId + ">" +
             "<div class ='row' style='background-color: #dee9fa'>" +
@@ -302,79 +301,50 @@ var getSimilarMovies = function(movieId){
             htmlString = "<div class='scrollmenu'>";
             for(var i=0;i<data.length;i++){
                 obj = data[i];
-                htmlString += movieSimilarityView(obj);
+                // append movie to dict_movie_picture_info
+                movie_info_elem_id = createMovieInfoElemId('similarity', obj.movieId);
+                movie_picture_elem_id = createMoviePictureElemId('similarity', obj.movieId);
+                dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                htmlString += movieViewShortSimilarity(obj, 'similar', obj.movieId);
             }
             htmlString +=   "</div>";
             document.getElementById('similarity_list').innerHTML = htmlString;
 
             $('#similar_movie_loader').hide();
-        }
-    )
-}
 
-
-var movieSimilarityView = function(obj){
-    return(
-        "<div class='similarity_class'>" +
-            "<div class ='row' style='background-color: #dee9fa'>" +
-                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
-                    obj.title +
-                "</div>" +
-            "</div>" +
-            "<p> Similarity Score: " + obj.similarity_score.toFixed(2) + "</p>" +
-            "<img src=" + obj.urlMoviePoster + " width='60%'>" +
-        "</div>"
-    )
-};
-
-var getMovieSuggestions = function(method){
-
-    // load movie suggestions
-    $('#suggested_movie_loader').show();
-
-    $.ajax({
-        type: 'GET',
-        url: url_suggested_movies,
-        dataType: 'json',
-        cache: true,
-        data: {
-            'method': method,
-        },
-        success: function(data){
-            console.log(data);
-            var htmlString = ''
-            htmlString = "<div class='scrollmenu'>";
-            for(var i=0;i<data.length;i++){
-                obj = data[i];
-                htmlString += suggestedMovieView(obj);
+            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
+            for(var i=0; i<movie_info_elements.length; i++){
+                movie_info_elements[i].hidden = true;
             }
-            htmlString +=   "</div>";
-            document.getElementById('suggested_movies_list').innerHTML = htmlString;
-
-            $('#suggested_movie_loader').hide();
-        },
-        error: function(e){
-            console.log(e)
         }
-    });
+    )
 }
 
 
-var suggestedMovieView = function(obj){
+var movieViewShortSimilarity = function(obj, movie_info_elem_id, movie_picture_elem_id){
     return(
-        "<div class='similarity_class'>" +
-            "<div class ='row' style='background-color: #dee9fa'>" +
-                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
-                    obj.title +
+        "<div class='suggested_movie_complete'>" +
+            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
+            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
+                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
+                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
+                        obj.title +
+                    "</div>" +
+                "</div>" +
+                "<div style='padding: 5px 5px;'>" +
+                    "<p> Similarity Score: " + obj.similarity_score.toFixed(2) + "</p>" +
+                    "<p>" + obj.country + ", " + obj.year + "</p>" +
+                    "<p>" + obj.runtime + " min </p>" +
                 "</div>" +
             "</div>" +
-            "<p> Expected Rating: " + obj.rating_pred.toFixed(2) + "</p>" +
-            "<img src=" + obj.urlMoviePoster + " width='60%'>" +
         "</div>"
     )
 }
+
 
 var getMovieSuggestionsCluster = function(){
+
+    $('#suggested_movie_loader').show();
 
     $.ajax({
         type: 'GET',
@@ -382,7 +352,75 @@ var getMovieSuggestionsCluster = function(){
         dataType: 'json',
         cache: true,
         success: function(data){
-            console.log(data)
+            clusters = Object.keys(data)
+            htmlString = '';
+            for(var i=0; i < clusters.length; i++){
+                cluster = clusters[i]
+                //console.log(data[cluster])
+                htmlString += "<h3>Cluster " + cluster + "</h3>"
+                htmlString += "<div class='scrollmenu'>";
+                for(var j=0; j<data[cluster].length; j++){
+                    obj = data[cluster][j];
+                    // append movie to dict_movie_picture_info
+                    movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
+                    movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
+                    dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                    // append movie to html
+                    htmlString += movieViewShortCluster(obj, movie_info_elem_id, movie_picture_elem_id);
+                }
+                htmlString += "</div>";
+            }
+            document.getElementById('suggested_movie_cluster_area').innerHTML = htmlString;
+
+            $('#suggested_movie_loader').hide();
+
+            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
+            for(var i=0; i<movie_info_elements.length; i++){
+                movie_info_elements[i].hidden = true;
+            }
         }
     });
+}
+
+var movieViewShortCluster = function(obj, movie_info_elem_id, movie_picture_elem_id){
+    return(
+        "<div class='suggested_movie_complete'>" +
+            //"<div class='suggested_movie_picture' id='" + movie_picture_elem_id +"' onclick='toggleMovieInfo(this);'>" +
+            //    "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%'>" +
+            //"</div>" +
+            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
+            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
+                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
+                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
+                        obj.title +
+                    "</div>" +
+                "</div>" +
+                "<div style='padding: 5px 5px;'>" +
+                    "<p> Expected Rating: " + obj.rating_pred.toFixed(2) + "</p>" +
+                    "<p>" + obj.country + ", " + obj.year + "</p>" +
+                    "<p>" + obj.runtime + " min </p>" +
+                "</div>" +
+            "</div>" +
+        "</div>"
+    )
+}
+
+var dict_movie_picture_info = {};
+
+var createMovieInfoElemId = function(cluster, movieId){
+    return('movie_info_'+cluster+'_'+movieId);
+}
+var createMoviePictureElemId = function(cluster, movieId){
+    return('movie_picture_'+cluster+'_'+movieId);
+}
+
+var toggleMovieInfo = function(elem){
+    movie_info_elem_id = dict_movie_picture_info[elem.id];
+    movie_info_elem = document.getElementById(movie_info_elem_id);
+    if(movie_info_elem.hidden == true){
+        movie_info_elem.hidden = false;
+    }
+    else{
+        movie_info_elem.hidden = true;
+    }
 }

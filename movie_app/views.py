@@ -380,7 +380,10 @@ def similar_movies(request):
     return HttpResponse(json.dumps(movies), 'application/json')
 
 
-def drop_rated_movies(movies, rated_movies):
+def drop_rated_movies(movies, user):
+    rated_movies = pd.DataFrame.from_records(
+        Rating.objects.filter(user=user).values()
+    )
     movies = movies[~movies.movieId.isin(rated_movies.movie_id)]
     return movies
 
@@ -406,7 +409,7 @@ def get_top_movies_imdb(user, nr_movies):
     return movies
 
 
-def get_top_movies_similarity(rated_movies, nr_movies):
+def get_top_movies_similarity(rated_movies, nr_movies, user):
     similarity_matrix = load_data.load_similarity_matrix()
     similarity_matrix = similarity_matrix
     movie_index = load_data.load_movie_index()
@@ -437,7 +440,7 @@ def get_top_movies_similarity(rated_movies, nr_movies):
     rating_pred = rating_pred[['movieId', 'rating_pred', 'score']]
 
     # drop movies already rated
-    rating_pred = drop_rated_movies(rating_pred, rated_movies)
+    rating_pred = drop_rated_movies(rating_pred, user)
     rating_pred.sort_values(by='score', ascending=False, inplace=True)
     rating_pred = rating_pred[:nr_movies]
     rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
@@ -467,7 +470,9 @@ def suggested_movies(request):
         rated_movies = pd.DataFrame.from_records(
             Rating.objects.filter(user=request.user).values('movie_id', 'rating')
         )
-        rating_pred = get_top_movies_similarity(rated_movies, nr_movies=nr_movies)
+        rating_pred = get_top_movies_similarity(rated_movies=rated_movies,
+                                                nr_movies=nr_movies,
+                                                user=request.user)
 
     if method == 'mixed':
         movies_similarity = get_top_movies_similarity(request.user)
@@ -488,19 +493,23 @@ def suggested_movies(request):
 
 def suggested_movies_cluster(request):
     user = request.user
-
     rated_movies = pd.DataFrame.from_records(
         Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster')
     )
     if rated_movies.empty:
         return HttpResponse(json.dumps({}), 'application/json')
     # get unique clusters (besides of not clustered movies)
-    clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
+    mean_ratings_clusters = rated_movies[~rated_movies.cluster.isna()].groupby('cluster')[['rating']].mean(). \
+        sort_values(by='rating', ascending=False)
+    clusters = mean_ratings_clusters.index
+    # clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
     suggested_movies_cluster = {}
     for cluster in clusters:
         cluster = int(cluster)
         rated_movies_cluster = rated_movies[rated_movies.cluster == cluster]
-        rating_pred_user = get_top_movies_similarity(rated_movies_cluster[['movie_id', 'rating']], nr_movies=100)
+        rating_pred_user = get_top_movies_similarity(rated_movies=rated_movies_cluster[['movie_id', 'rating']],
+                                                     nr_movies=100,
+                                                     user=request.user)
         movies_cluster = get_movies(rating_pred_user.movieId)
         movies_cluster = movies_cluster.merge(rating_pred_user, how='inner', on='movieId')
         movies_cluster.sort_values(by='rating_pred', ascending=False, inplace=True)

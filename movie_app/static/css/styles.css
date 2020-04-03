@@ -178,17 +178,38 @@ h3 {
 
 .similarity_class {
     background-color: #fafcff;
-    padding: 0px 15px;
+    width: 200px;
+    padding: 0px 0px;
     display: inline-block;
     vertical-align:top;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    margin-right: 10px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    margin-right: 20px;
     white-space:normal;
-    width: 200px;
     -moz-box-shadow:    3px 3px 5px 2px #ccc;
     -webkit-box-shadow: 3px 3px 5px 2px #ccc;
     box-shadow:         3px 3px 5px 2px #ccc;
+}
+
+.suggested_movie_complete {
+    height: 250px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    margin-right: 20px;
+    display: inline-block;
+    vertical-align:top;
+    white-space:normal;
+    -moz-box-shadow:    3px 3px 5px 2px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
+    box-shadow:         3px 3px 5px 2px #ccc;
+}
+
+.movie_view_short_info {
+    background-color: #fafcff;
+    padding: 0px 0px;
+    display: inline-block;
+    vertical-align:top;
+    white-space:normal;
 }
 
 /* Dropdown for Genre and Year Filter */
@@ -278,4 +299,26 @@ h3 {
   height: 5px;
   background-color: white;
   margin: 6px 0;
+}
+
+
+.img_suggestion {
+    opacity: 0.82;
+}
+
+.img_suggestion:hover {
+    opacity: 1.0;
+}
+
+h2 {
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+    color: #283654;
+}
+
+h3 {
+    color: #283654;
+    text-align: center;
+    margin-top: 10px;
 }
