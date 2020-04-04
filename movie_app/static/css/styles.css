@@ -156,17 +156,7 @@ h3 {
     text-align: center;
 }
 
-.movie_class {
-    background-color: #fafcff;/*#cfe0f9;*/
-    padding: 0px 15px;
-    text-align: left;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    color: #1c1e24;
-    -moz-box-shadow:    3px 3px 5px 2px #ccc;
-    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
-    box-shadow:         3px 3px 5px 2px #ccc;
-}
+
 
 .scrollmenu {
   overflow: auto;
@@ -191,6 +181,41 @@ h3 {
     box-shadow:         3px 3px 5px 2px #ccc;
 }
 
+/***************************** Movie View: Detailed **************************************************/
+
+.movie_view_detailed_complete {
+    height: 300px;
+    width: 100%;
+    color: #1c1e24;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    margin-right: 20px;
+    display: inline-block;
+    vertical-align:top;
+    white-space:normal;
+    -moz-box-shadow:    3px 3px 5px 2px #ccc;
+    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
+    box-shadow:         3px 3px 5px 2px #ccc;
+}
+
+.movie_view_detailed_info {
+    background-color: #fafcff;
+    text-align: left;
+    display: inline-block;
+    white-space:normal;
+    vertical-align: top;
+    height: 100%;
+    width: calc(100% - 200px);
+    float: right;
+}
+
+.img_movie_view_detailed {
+    width: 200px;
+    height: 100%;
+}
+
+/********************** Movie View: Short (Suggestions, Similarity) *************************************/
+
 .suggested_movie_complete {
     height: 250px;
     margin-top: 30px;
@@ -211,6 +236,17 @@ h3 {
     vertical-align:top;
     white-space:normal;
 }
+
+.img_suggestion {
+    opacity: 0.82;
+    height: 100%;
+}
+
+.img_suggestion:hover {
+    opacity: 1.0;
+}
+
+
 
 /* Dropdown for Genre and Year Filter */
 
@@ -302,13 +338,6 @@ h3 {
 }
 
 
-.img_suggestion {
-    opacity: 0.82;
-}
-
-.img_suggestion:hover {
-    opacity: 1.0;
-}
 
 h2 {
     font-weight: bold;

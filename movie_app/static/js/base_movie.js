@@ -260,30 +260,32 @@ var getSingleMovie = function(search_elem, result_elem){
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
 var movieViewDetailed = function(obj){
     return (
-        "<div class='movie_class' id=" + obj.movieId + ">" +
-            "<div class ='row' style='background-color: #dee9fa'>" +
-                "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
-                    obj.title +
+        "<div class='movie_view_detailed_complete'>" +
+            "<img src=" + obj.urlMoviePoster + " class='img_movie_view_detailed'>" +
+            "<div class='movie_view_detailed_info' id=" + obj.movieId + ">" +
+                "<div class ='row' style='background-color: #dee9fa; margin-left: 0px; margin-right: 0px;'>" +
+                    "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
+                        obj.title +
+                    "</div>" +
                 "</div>" +
-            "</div>" +
-            "<div class='row' style='padding-top: 5px; padding: 5px;'>" +
-                "<img src='" + obj.urlMoviePoster + "' height=200px>" +
-                "<div class='col-sm-6'>" +
-                    "<p>" + obj.year + ", " +
-                            obj.country + ", " +
-                            obj.production +
-                     "</p>" +
-                     "<p> Actors: " + obj.actor + "</p>" +
-                     "<p> Director: " + obj.director + "</p>" +
-                     "<p> Writer: " + obj.writer + "</p>" +
-                     "<p> Genre: " + obj.genre + "</p>" +
+                "<div class='row' style='margin-left: 0px; margin-right: 0px; padding: 5px 5px;'>" +
+                    "<div class='col-sm-7'>" +
+                        "<p>" + obj.year + ", " +
+                                obj.country + ", " +
+                                obj.production +
+                         "</p>" +
+                         "<p> Actors: " + obj.actor + "</p>" +
+                         "<p> Director: " + obj.director + "</p>" +
+                         "<p> Writer: " + obj.writer + "</p>" +
+                         "<p> Genre: " + obj.genre + "</p>" +
+                    "</div>" +
+                    "<div class='col-sm-2'>" +
+                        "<div class='rateyo' id='rateyo_" + obj.movieId + "'></div>" +
+                        "<p>Imdb-Rating: " + obj.imdbRating + "</p>" +
+                    "</div>" +
                 "</div>" +
-                "<div class='col-sm-4'>" +
-                    "<div class='rateyo' id='rateyo_" + obj.movieId + "'></div>" +
-                    "<p>Imdb-Rating: " + obj.imdbRating + "</p>" +
-                "</div>" +
-            "</div>" +
-         "</div>"
+             "</div>" +
+        "</div>"
     )
 };
 
@@ -305,7 +307,7 @@ var getSimilarMovies = function(movieId){
                 movie_info_elem_id = createMovieInfoElemId('similarity', obj.movieId);
                 movie_picture_elem_id = createMoviePictureElemId('similarity', obj.movieId);
                 dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
-                htmlString += movieViewShortSimilarity(obj, 'similar', obj.movieId);
+                htmlString += movieViewShortSimilarity(obj, movie_info_elem_id, movie_picture_elem_id);
             }
             htmlString +=   "</div>";
             document.getElementById('similarity_list').innerHTML = htmlString;
@@ -324,7 +326,7 @@ var getSimilarMovies = function(movieId){
 var movieViewShortSimilarity = function(obj, movie_info_elem_id, movie_picture_elem_id){
     return(
         "<div class='suggested_movie_complete'>" +
-            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
+            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
             "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
                 "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
                     "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
@@ -385,9 +387,6 @@ var getMovieSuggestionsCluster = function(){
 var movieViewShortCluster = function(obj, movie_info_elem_id, movie_picture_elem_id){
     return(
         "<div class='suggested_movie_complete'>" +
-            //"<div class='suggested_movie_picture' id='" + movie_picture_elem_id +"' onclick='toggleMovieInfo(this);'>" +
-            //    "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%'>" +
-            //"</div>" +
             "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
             "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
                 "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
