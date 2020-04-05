@@ -82,6 +82,12 @@ class Rating(models.Model):
     cluster = models.IntegerField(null=True)
 
 
+class ClusteringStatus(models.Model):
+    """Model stores the status of the clustering algorithm for the movies of users"""
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, null=True)
+
+
 class MoviesSimilar(models.Model):
     """Model saves the similarity scores (of the top movies)"""
     baseMovie = models.ForeignKey(Movie, related_name='baseMovie', on_delete=models.SET_NULL, null=True)
