@@ -354,6 +354,7 @@ var getMovieSuggestionsCluster = function(){
         dataType: 'json',
         cache: true,
         success: function(data){
+            console.log(data)
             clusters = Object.keys(data)
             htmlString = '';
             for(var i=0; i < clusters.length; i++){
