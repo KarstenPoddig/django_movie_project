@@ -138,7 +138,6 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
             result_nav_elem_bottom.innerHTML = result_nav_area_top.innerHTML;
 
             console.log(data['meta'])
-
             //
             result_elem.innerHTML = '';
 
@@ -175,7 +174,7 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
                 }).on('rateyo.set', function(e, data){
                     var movieId = this.id.split("_")[1]
                     $.ajax({
-                        'type': 'POST',
+                        'type': 'GET',
                         'url': url_rate_movie,
                         'data': {
                             'movieId': movieId,
@@ -183,8 +182,8 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
                             'csrfmiddlewaretoken': getCookie("csrftoken")
                         },
                         success: function(){
-                            if(data.rating == 0){
-                                getMovies(search_elem, result_elem, only_rated_movies, nr_movies);
+                            if(data.rating == 0 && only_rated_movies==1){
+                                getMovies(search_elem, result_elem, only_rated_movies, nr_movies, page_number);
                             }
                         }
                     });
@@ -355,23 +354,30 @@ var getMovieSuggestionsCluster = function(){
         cache: true,
         success: function(data){
             console.log(data)
-            clusters = Object.keys(data)
             htmlString = '';
-            for(var i=0; i < clusters.length; i++){
-                cluster = clusters[i]
-                //console.log(data[cluster])
-                htmlString += "<h3>Cluster " + cluster + "</h3>"
-                htmlString += "<div class='scrollmenu'>";
-                for(var j=0; j<data[cluster].length; j++){
-                    obj = data[cluster][j];
-                    // append movie to dict_movie_picture_info
-                    movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
-                    movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
-                    dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
-                    // append movie to html
-                    htmlString += movieViewShortCluster(obj, movie_info_elem_id, movie_picture_elem_id);
+            // catch errors
+            if(Object.keys(data)[0]=="error"){
+                htmlString = data["error"]
+            }
+            // display movie suggestions
+            else{
+                clusters = Object.keys(data)
+                for(var i=0; i < clusters.length; i++){
+                    cluster = clusters[i]
+                    //console.log(data[cluster])
+                    htmlString += "<h3>Cluster " + cluster + "</h3>"
+                    htmlString += "<div class='scrollmenu'>";
+                    for(var j=0; j<data[cluster].length; j++){
+                        obj = data[cluster][j];
+                        // append movie to dict_movie_picture_info
+                        movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
+                        movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
+                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        // append movie to html
+                        htmlString += movieViewShortCluster(obj, movie_info_elem_id, movie_picture_elem_id);
+                    }
+                    htmlString += "</div>";
                 }
-                htmlString += "</div>";
             }
             document.getElementById('suggested_movie_cluster_area').innerHTML = htmlString;
 

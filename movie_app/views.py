@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from movie_app.models import Movie, Rating
+from movie_app.models import Movie, Rating, ClusteringStatus
 from django.http import HttpResponse
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -153,7 +153,6 @@ def get_genre_filter_str(filter_genre):
         genre_list = "'" + filter_genre[0] + "'"
         for genre in filter_genre[1:]:
             genre_list = genre_list + ",'" + genre + "'"
-        print(genre_list)
         return genre_list
 
 
@@ -243,7 +242,7 @@ def movie_search_long(request):
     nr_results_shown = int(request.GET.get('nr_results_shown', 10))
     filter_genre = request.GET.get('filter_genre', '')
     filter_year = request.GET.get('filter_year', '')
-    page_number = int(request.GET.get('page_number', 10))
+    page_number = int(request.GET.get('page_number', 1))
 
     cursor = connection.cursor()
     # compute the total number of results
@@ -253,6 +252,8 @@ def movie_search_long(request):
                                               only_rated_movies=only_rated_movies,
                                               user_id=request.user.id))
     nr_results_total = cursor.fetchone()[0]
+    nr_pages_total = int(np.ceil(nr_results_total/nr_results_shown))
+    page_number = min(nr_pages_total, page_number)
     # perform the actual query
     cursor.execute(build_movie_query(term=term,
                                      filter_genre=filter_genre,
@@ -280,10 +281,9 @@ def movie_search_long(request):
 
 def rate_movie(request):
     """This function is used to set ratings of movies"""
-
     # Preprocessing: reading parameters from the request
-    movieId = int(request.POST.get('movieId'))
-    rating = float(request.POST.get('rating'))
+    movieId = int(request.GET.get('movieId'))
+    rating = float(request.GET.get('rating'))
 
     ratings = Rating.objects.filter(user=request.user,
                                     movie__movieId=movieId)
@@ -321,9 +321,6 @@ def rate_movie(request):
             print('Error - multiple entries found')
 
     return HttpResponse('Done')
-
-
-
 
 
 class Analysis(TemplateView):
@@ -466,11 +463,25 @@ def get_movies(movie_ids):
 
 def suggested_movies_cluster(request):
     user = request.user
+    # check if the cluster algorithm is performed right now
+    # (this is sometimes the case if this view is called shortly after rating some movies).
+    # return then a corresponding message
+    clustering_status = ClusteringStatus.objects.filter(user=user)[0].status
+    if clustering_status == 'Pending':
+        return HttpResponse(json.dumps({'error':
+                                        'Your movies are clustered right now (because you added ' +
+                                        'or deleted one or more of your ratings. Please wait a ' +
+                                        'minute or two and try again.'}),
+                            'application/json')
+
     rated_movies = pd.DataFrame.from_records(
         Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster')
     )
     if rated_movies.empty:
-        return HttpResponse(json.dumps({}), 'application/json')
+        return HttpResponse(json.dumps({'error':
+                                        "You didn't rate any movies " +
+                                        "yet."}),
+                            'application/json')
     # get unique clusters (besides of not clustered movies)
     mean_ratings_clusters = rated_movies[~rated_movies.cluster.isna()].groupby('cluster')[['rating']].mean(). \
         sort_values(by='rating', ascending=False)

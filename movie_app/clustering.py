@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 import random
-from movie_app.models import Rating, Movie
+from movie_app.models import Rating, Movie, ClusteringStatus
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
+import math
 
 
 def join_movies_to_row_index(movies):
@@ -27,8 +28,17 @@ def update_movie_clusters(user, movieId, rating_action):
     dropped, i.e. the nr of rated movies changes from 121 to 120.
     """
     nr_movies = Rating.objects.filter(user=user).count()
-    if (nr_movies % 20) == 0:
+    if (nr_movies % 20) == 0 and nr_movies > 0:
+        clustering_status = ClusteringStatus.objects.filter(user=user)[0]
+        clustering_status.status = 'Pending'
+        clustering_status.save()
+        print('Set clustering status to pending.')
+
         compute_new_clusters_movies(user)
+
+        clustering_status.status = 'Done'
+        clustering_status.save()
+        print('Set clustering status to done.')
     else:
         if rating_action == 'created':
             assign_movie_to_cluster(user, movieId)
@@ -77,6 +87,9 @@ def assign_movie_to_cluster(user, movieId):
 
 
 def get_best_cluster_for_movie(movies, movieId):
+    # if there are no rated movies or the aren't clustered return None
+    if movies.empty or movies.cluster.unique()[0] is None:
+        return None
     movies = join_movies_to_row_index(movies)
     distance_matrix = load_distance_matrix()
     movies['rank_log'] = distance_matrix[movies.row_index.astype('int'),
@@ -164,3 +177,6 @@ def cluster_algorithm_1(movies, distance_matrix):
                   ' Old (partial) score:' + str(round(score_cluster_1_old + score_cluster_2_old, 2)) +
                   ' New (partial) score:' + str(round(score_cluster_1_new + score_cluster_2_new, 2)))
     return movies
+
+
+
