@@ -18,8 +18,9 @@
         <script type="text/javascript">
             var url_rate_movie = '{% url 'rate-movie' %}';
             var url_movie_search_long = '{% url 'movie-search-long' %}';
-            var url_similar_movies = '{% url 'similar-movies' %}';
-            var url_suggested_movies_cluster = '{% url 'suggested-movies-cluster' %}';
+            var url_suggestions_cluster_data = '{% url 'suggestions-cluster-data' %}';
+            var url_suggestions_similar_movies_data = '{% url 'suggestions-similar-movies-data' %}';
+            var url_suggestions_actor_data = '{% url 'suggestions-actor-data' %}';
         </script>
 
     </head>
@@ -30,7 +31,12 @@
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'all-movies-overview' %}">All Movies</a>
             <a href="{% url 'rated-movies-overview' %}">Rated Movies</a>
-            <a href="{% url 'suggestions' %}">Movie Suggestions</a>
+            <a href="">Suggestions</a>
+            <ul style="list-style-type:none">
+                <li><a href="{% url 'suggestions-cluster-template' %}">Clusters</a></li>
+                <li><a href="{% url 'suggestions-similar-movies-template' %}">Similar Movies</a></li>
+                <li><a href="{% url 'suggestions-actor-template' %}">Actors</a></li>
+            </ul>
             {% if request.user.is_staff %}
             <hr>
             <a href="{% url 'analysis' %}">Analysis</a>
@@ -61,7 +67,7 @@
                             <button class="button">Sign up</button>
                         </a>
                         <a href="{% url 'login' %}?next={% url 'all-movies-overview' %}">
-                            <button class="button">Login</button>
+                            <button class="button">Sign in</button>
                         </a>
                         {% endif %}
                     </div>

@@ -9,7 +9,30 @@ urlpatterns = [
     path('rated_movies/', views.RatedMovies.as_view(), name='rated-movies-overview'),
     path('rate_movie/', views.rate_movie, name='rate-movie'),
     path('analysis/', views.Analysis.as_view(), name='analysis'),
-    path('suggestions/', views.SuggestionView.as_view(), name='suggestions'),
-    path('similar_movies/', views.similar_movies, name='similar-movies'),
-    path('suggested_movies_cluster/', views.suggested_movies_cluster, name='suggested-movies-cluster'),
+
+
+    # Suggestion Views
+
+    # Suggestions: Cluster
+    # path of template page
+    path('suggestions_cluster_template/', views.SuggestionsClusterView.as_view(),
+         name='suggestions-cluster-template'),
+    # path of data (json)
+    path('suggestions_cluster_data/', views.suggestions_cluster_data,
+         name='suggestions-cluster-data'),
+
+    # Suggestions: Similar Movies
+    # path of template page
+    path('suggestions_similar_movies_template/', views.SuggestionsSimilarMoviesView.as_view(),
+         name='suggestions-similar-movies-template'),
+    # path of data (json)
+    path('suggestions_similar_movies_data/', views.suggestions_similar_movies_data,
+         name='suggestions-similar-movies-data'),
+
+    # Suggestions: Actors
+    # path of template page
+    path('suggestions_actor_template/', views.SuggestionsActorView.as_view(),
+         name='suggestions-actor-template'),
+    # path of data (json)
+    path('suggestions_actor_data/', views.suggestions_actor_data, name='suggestions-actor-data'),
 ]

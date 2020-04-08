@@ -294,7 +294,7 @@ var getSimilarMovies = function(movieId){
     $('#similar_movie_loader').show();
     document.getElementById('similarity_list').innerHTML = '';
 
-    $.getJSON(url_similar_movies,
+    $.getJSON(url_suggestions_similar_movies_data,
         {'movieId': movieId},
         function(data){
             console.log(data);
@@ -349,7 +349,7 @@ var getMovieSuggestionsCluster = function(){
 
     $.ajax({
         type: 'GET',
-        url: url_suggested_movies_cluster,
+        url: url_suggestions_cluster_data,
         dataType: 'json',
         cache: true,
         success: function(data){

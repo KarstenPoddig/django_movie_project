@@ -362,11 +362,19 @@ the most similar movies. The result is returned in json format.
 """
 
 
-class SuggestionView(TemplateView):
-    template_name = 'movie_app/suggestions.html'
+class SuggestionsClusterView(TemplateView):
+    template_name = 'movie_app/suggestions_cluster.html'
 
 
-def similar_movies(request):
+class SuggestionsSimilarMoviesView(TemplateView):
+    template_name = 'movie_app/suggestions_similar_movies.html'
+
+
+class SuggestionsActorView(TemplateView):
+    template_name = 'movie_app/suggestions_actor.html'
+
+
+def suggestions_similar_movies_data(request):
     movieId = int(request.GET.get('movieId', ''))
 
     movie_similarity_matrix = load_data.load_similarity_matrix()
@@ -461,7 +469,7 @@ def get_movies(movie_ids):
     return movies
 
 
-def suggested_movies_cluster(request):
+def suggestions_cluster_data(request):
     user = request.user
     # check if the cluster algorithm is performed right now
     # (this is sometimes the case if this view is called shortly after rating some movies).
@@ -511,3 +519,7 @@ def suggested_movies_cluster(request):
         result_suggested_movies_cluster[cluster_displayed] = movies_cluster
         cluster_displayed += 1
     return HttpResponse(json.dumps(result_suggested_movies_cluster), 'application/json')
+
+
+def suggestions_actor_data(request):
+    return HttpResponse(json.dump({}), 'application/json')
