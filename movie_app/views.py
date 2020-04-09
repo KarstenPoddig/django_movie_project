@@ -376,7 +376,7 @@ class SuggestionsActorView(TemplateView):
 
 def suggestions_similar_movies_data(request):
     movieId = int(request.GET.get('movieId', ''))
-
+    print(movieId)
     movie_similarity_matrix = load_data.load_similarity_matrix()
     df_movie_index = load_data.load_movie_index()
     df_similarity = df_movie_index
@@ -390,6 +390,7 @@ def suggestions_similar_movies_data(request):
     df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:21]
     movies = df_similarity.merge(get_movies(df_similarity.movieId),
                                  how='inner', on='movieId')
+    movies = movies.fillna('')
     movies = movies.to_dict('records')
     return HttpResponse(json.dumps(movies), 'application/json')
 

@@ -294,9 +294,15 @@ var getSimilarMovies = function(movieId){
     $('#similar_movie_loader').show();
     document.getElementById('similarity_list').innerHTML = '';
 
-    $.getJSON(url_suggestions_similar_movies_data,
-        {'movieId': movieId},
-        function(data){
+    $.ajax({
+        type: 'GET',
+        url: url_suggestions_similar_movies_data,
+        dataType: 'json',
+        cache: true,
+        data: {
+            'movieId': movieId
+        },
+        success: function(data){
             console.log(data);
             var htmlString = ''
             htmlString = "<div class='scrollmenu'>";
@@ -318,7 +324,7 @@ var getSimilarMovies = function(movieId){
                 movie_info_elements[i].hidden = true;
             }
         }
-    )
+    })
 }
 
 
