@@ -8,7 +8,8 @@ import numpy as np
 from django.db.models import Count, Avg
 from django.db import connection
 from movie_app.recommendation_models import load_data
-from movie_app.clustering import update_movie_clusters
+from movie_app.suggestions_cluster import update_movie_clusters
+from movie_app.suggestions_actor import get_movie_suggestions_actor
 import requests
 
 """
@@ -376,7 +377,7 @@ class SuggestionsActorView(TemplateView):
 
 def suggestions_similar_movies_data(request):
     movieId = int(request.GET.get('movieId', ''))
-    print(movieId)
+
     movie_similarity_matrix = load_data.load_similarity_matrix()
     df_movie_index = load_data.load_movie_index()
     df_similarity = df_movie_index
@@ -523,4 +524,7 @@ def suggestions_cluster_data(request):
 
 
 def suggestions_actor_data(request):
-    return HttpResponse(json.dump({}), 'application/json')
+    user = request.user
+    data = get_movie_suggestions_actor(user=user)
+    return HttpResponse(json.dumps(data),
+                        'application/json')

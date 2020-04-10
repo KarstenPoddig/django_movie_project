@@ -417,6 +417,26 @@ var movieViewShortCluster = function(obj, movie_info_elem_id, movie_picture_elem
     )
 }
 
+var movieViewShortActor = function(obj, movie_info_elem_id, movie_picture_elem_id){
+    return(
+        "<div class='suggested_movie_complete'>" +
+            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
+            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
+                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
+                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
+                        obj.title +
+                    "</div>" +
+                "</div>" +
+                "<div style='padding: 5px 5px;'>" +
+                    "<p>" + obj.country + ", " + obj.year + "</p>" +
+                    "<p>" + obj.runtime + " min </p>" +
+                "</div>" +
+            "</div>" +
+        "</div>"
+    )
+}
+
+
 var dict_movie_picture_info = {};
 
 var createMovieInfoElemId = function(cluster, movieId){
@@ -435,4 +455,52 @@ var toggleMovieInfo = function(elem){
     else{
         movie_info_elem.hidden = true;
     }
+}
+
+var getMovieSuggestionsActor = function(){
+
+    $('#suggested_movie_loader').show();
+
+    $.ajax({
+        type: 'GET',
+        url: url_suggestions_actor_data,
+        dataType: 'json',
+        cache: true,
+        success: function(data){
+            console.log(data)
+            htmlString = '';
+            // catch errors
+            if(Object.keys(data)[0]=="error"){
+                htmlString = data["error"]
+            }
+            // display movie suggestions
+            else{
+                actors = Object.keys(data)
+                for(var i=0; i < actors.length; i++){
+                    actor = actors[i]
+                    //console.log(data[cluster])
+                    htmlString += "<h3>Cluster " + actor + "</h3>"
+                    htmlString += "<div class='scrollmenu'>";
+                    for(var j=0; j<data[actor].length; j++){
+                        obj = data[actor][j];
+                        // append movie to dict_movie_picture_info
+                        movie_info_elem_id = createMovieInfoElemId(actor, obj.movieId);
+                        movie_picture_elem_id = createMoviePictureElemId(actor, obj.movieId);
+                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        // append movie to html
+                        htmlString += movieViewShortActor(obj, movie_info_elem_id, movie_picture_elem_id);
+                    }
+                    htmlString += "</div>";
+                }
+            }
+            document.getElementById('suggested_movie_cluster_area').innerHTML = htmlString;
+
+            $('#suggested_movie_loader').hide();
+
+            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
+            for(var i=0; i<movie_info_elements.length; i++){
+                movie_info_elements[i].hidden = true;
+            }
+        }
+    });
 }

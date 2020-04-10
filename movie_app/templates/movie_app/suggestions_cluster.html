@@ -16,26 +16,6 @@
 
     {% endif %}
 
-    <h2>Based on a specific movie:</h2>
-
-    <div class="ui-widget">
-        <input placeholder="Movie title" id="movie_title" style="width: 75%">
-        <button id="search_button" class="button" type="submit" style="width: 20%">Search!</button>
-    </div>
-
-    <div id="movie_base"></div>
-
-    <h3>Results</h3>
-        <div id="similarity_list"></div>
-
-        <div class="container_loader" id="similar_movie_loader">
-            <div class="loader"></div>
-            <p>Searching ...</p>
-        </div>
-
-
-    <h2>Method 3 ....</h2>
-    Movie recommendations based on ...
 
     {% load static %}
     <script type="text/javascript">
@@ -45,36 +25,7 @@
     <script type="text/javascript" src="{% static 'js/jquery.rateyo.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/base_movie.js' %}"></script>
-    <script type="text/javascript">
-        // click Search-Button when Enter is pressed in the Input-Field
-        var input = document.getElementById('movie_title');
-        input.addEventListener('keyup', function(event){
-            if (event.keyCode === 13){
-                event.preventDefault();
-                document.getElementById('search_button').click();
-             }
-         });
 
-        // Search base movie
-        var search_elem = document.getElementById('movie_title');
-        var result_elem = document.getElementById('movie_base');
-
-        // search Movies on button click
-        var search_button = document.getElementById('search_button');
-        search_button.onclick = function(){
-            getSingleMovie(search_elem, result_elem);
-        };
-
-        // autocompletion for movie title search field
-        $('#movie_title').autocomplete({
-            source: url_movie_search_short,
-            minLength: 3,
-        })
-
-        // hide similar movie loader initially
-        $('#similar_movie_loader').hide();
-
-    </script>
     {% if request.user.is_authenticated %}
     <script type="text/javascript">
         // if user is logged in, search similar movies initially
