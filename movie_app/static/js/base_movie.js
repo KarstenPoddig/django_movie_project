@@ -301,7 +301,6 @@ var getMovieViewShort = function(obj, elem_ids, type){
     movie_info_elem_id = elem_ids['movie_info_elem_id']
     movie_picture_elem_id = elem_ids['movie_picture_elem_id']
     dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
-
     htmlString = "<div class='suggested_movie_complete'>" +
                     "<img src=" + obj.urlMoviePoster + " class='img_suggestion' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
                     "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
@@ -321,9 +320,11 @@ var getMovieViewShort = function(obj, elem_ids, type){
         case "similarity":
             htmlString = htmlString.replace("EXTRA_LINE", "<p> Similarity Score: " +
                                                             obj.similarity_score.toFixed(2) + "</p>")
+            break;
         case "prediction":
             htmlString = htmlString.replace("EXTRA_LINE", "<p> Predicted Rating: " +
                                                             obj.rating_pred.toFixed(2) + "</p>")
+            break;
         case "else":
             htmlString = htmlString.replace("EXTRA_LINE", "")
     }
@@ -352,7 +353,7 @@ var getSimilarMovies = function(movieId){
             for(var i=0;i<data.length;i++){
                 obj = data[i];
                 elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=1)
-                htmlString += getMovieViewShort(obj, elem_id, type='similarity');
+                htmlString += getMovieViewShort(obj, elem_ids, type='similarity');
             }
             htmlString +=   "</div>";
             document.getElementById('similarity_list').innerHTML = htmlString;
