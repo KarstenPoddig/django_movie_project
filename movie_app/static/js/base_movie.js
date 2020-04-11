@@ -150,7 +150,7 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
 
             for(var i=0; i<data['movies'].length; i++){
                 var obj = data['movies'][i];
-                htmlString+= movieViewDetailed(obj)
+                htmlString+= getMovieViewDetailed(obj)
 
             };
             result_elem.innerHTML += htmlString
@@ -221,7 +221,7 @@ var getSingleMovie = function(search_elem, result_elem){
 
             var obj = data['movies'][0];
 
-            result_elem.innerHTML = movieViewDetailed(obj);
+            result_elem.innerHTML = getMovieViewDetailed(obj);
 
             var rating;
             if (typeof(obj.rating)=='number'){
@@ -257,7 +257,7 @@ var getSingleMovie = function(search_elem, result_elem){
 
 
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
-var movieViewDetailed = function(obj){
+var getMovieViewDetailed = function(obj){
     return (
         "<div class='movie_view_detailed_complete'>" +
             "<img src=" + obj.urlMoviePoster + " class='img_movie_view_detailed'>" +
@@ -288,6 +288,49 @@ var movieViewDetailed = function(obj){
     )
 };
 
+
+var dict_movie_picture_info = {};
+
+var getMovieShortViewElemIds = function(row, movieId){
+    return {'movie_info_elem_id': 'movie_info_' + row + '_' + movieId,
+            'movie_picture_elem_id': 'movie_picture_' + row + '_' + movieId}
+}
+
+
+var getMovieViewShort = function(obj, elem_ids, type){
+    movie_info_elem_id = elem_ids['movie_info_elem_id']
+    movie_picture_elem_id = elem_ids['movie_picture_elem_id']
+    dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+
+    htmlString = "<div class='suggested_movie_complete'>" +
+                    "<img src=" + obj.urlMoviePoster + " class='img_suggestion' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
+                    "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
+                        "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
+                            "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
+                                obj.title +
+                            "</div>" +
+                        "</div>" +
+                        "<div style='padding: 5px 5px;'>" +
+                            "EXTRA_LINE" +
+                            "<p>" + obj.country + ", " + obj.year + "</p>" +
+                            "<p>" + obj.runtime + " min </p>" +
+                        "</div>" +
+                    "</div>" +
+                "</div>"
+    switch(type){
+        case "similarity":
+            htmlString = htmlString.replace("EXTRA_LINE", "<p> Similarity Score: " +
+                                                            obj.similarity_score.toFixed(2) + "</p>")
+        case "prediction":
+            htmlString = htmlString.replace("EXTRA_LINE", "<p> Predicted Rating: " +
+                                                            obj.rating_pred.toFixed(2) + "</p>")
+        case "else":
+            htmlString = htmlString.replace("EXTRA_LINE", "")
+    }
+    return htmlString
+}
+
+
 var getSimilarMovies = function(movieId){
 
     // load similar movies
@@ -308,11 +351,8 @@ var getSimilarMovies = function(movieId){
             htmlString = "<div class='scrollmenu'>";
             for(var i=0;i<data.length;i++){
                 obj = data[i];
-                // append movie to dict_movie_picture_info
-                movie_info_elem_id = createMovieInfoElemId('similarity', obj.movieId);
-                movie_picture_elem_id = createMoviePictureElemId('similarity', obj.movieId);
-                dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
-                htmlString += movieViewShortSimilarity(obj, movie_info_elem_id, movie_picture_elem_id);
+                elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=1)
+                htmlString += getMovieViewShort(obj, elem_id, type='similarity');
             }
             htmlString +=   "</div>";
             document.getElementById('similarity_list').innerHTML = htmlString;
@@ -325,27 +365,6 @@ var getSimilarMovies = function(movieId){
             }
         }
     })
-}
-
-
-var movieViewShortSimilarity = function(obj, movie_info_elem_id, movie_picture_elem_id){
-    return(
-        "<div class='suggested_movie_complete'>" +
-            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
-            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
-                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
-                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
-                        obj.title +
-                    "</div>" +
-                "</div>" +
-                "<div style='padding: 5px 5px;'>" +
-                    "<p> Similarity Score: " + obj.similarity_score.toFixed(2) + "</p>" +
-                    "<p>" + obj.country + ", " + obj.year + "</p>" +
-                    "<p>" + obj.runtime + " min </p>" +
-                "</div>" +
-            "</div>" +
-        "</div>"
-    )
 }
 
 
@@ -375,12 +394,9 @@ var getMovieSuggestionsCluster = function(){
                     htmlString += "<div class='scrollmenu'>";
                     for(var j=0; j<data[cluster].length; j++){
                         obj = data[cluster][j];
-                        // append movie to dict_movie_picture_info
-                        movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
-                        movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
-                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        elem_ids = getMovieShortViewElemIds(movieId = obj.movieId, row=j)
                         // append movie to html
-                        htmlString += movieViewShortCluster(obj, movie_info_elem_id, movie_picture_elem_id);
+                        htmlString += getMovieViewShort(obj=obj, elem_ids=elem_ids, type='prediction');
                     }
                     htmlString += "</div>";
                 }
@@ -397,54 +413,6 @@ var getMovieSuggestionsCluster = function(){
     });
 }
 
-var movieViewShortCluster = function(obj, movie_info_elem_id, movie_picture_elem_id){
-    return(
-        "<div class='suggested_movie_complete'>" +
-            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
-            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
-                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
-                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
-                        obj.title +
-                    "</div>" +
-                "</div>" +
-                "<div style='padding: 5px 5px;'>" +
-                    "<p> Expected Rating: " + obj.rating_pred.toFixed(2) + "</p>" +
-                    "<p>" + obj.country + ", " + obj.year + "</p>" +
-                    "<p>" + obj.runtime + " min </p>" +
-                "</div>" +
-            "</div>" +
-        "</div>"
-    )
-}
-
-var movieViewShortActor = function(obj, movie_info_elem_id, movie_picture_elem_id){
-    return(
-        "<div class='suggested_movie_complete'>" +
-            "<img src=" + obj.urlMoviePoster + " class='img_suggestion' height='100%' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
-            "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
-                "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
-                    "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
-                        obj.title +
-                    "</div>" +
-                "</div>" +
-                "<div style='padding: 5px 5px;'>" +
-                    "<p>" + obj.country + ", " + obj.year + "</p>" +
-                    "<p>" + obj.runtime + " min </p>" +
-                "</div>" +
-            "</div>" +
-        "</div>"
-    )
-}
-
-
-var dict_movie_picture_info = {};
-
-var createMovieInfoElemId = function(cluster, movieId){
-    return('movie_info_'+cluster+'_'+movieId);
-}
-var createMoviePictureElemId = function(cluster, movieId){
-    return('movie_picture_'+cluster+'_'+movieId);
-}
 
 var toggleMovieInfo = function(elem){
     movie_info_elem_id = dict_movie_picture_info[elem.id];
@@ -484,11 +452,9 @@ var getMovieSuggestionsActor = function(){
                     for(var j=0; j<data[actor].length; j++){
                         obj = data[actor][j];
                         // append movie to dict_movie_picture_info
-                        movie_info_elem_id = createMovieInfoElemId(actor, obj.movieId);
-                        movie_picture_elem_id = createMoviePictureElemId(actor, obj.movieId);
-                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=j)
                         // append movie to html
-                        htmlString += movieViewShortActor(obj, movie_info_elem_id, movie_picture_elem_id);
+                        htmlString += getMovieViewShort(obj, elem_ids, type='else');
                     }
                     htmlString += "</div>";
                 }
@@ -532,11 +498,9 @@ var getRatedMoviesClustered = function(){
                     for(var j=0; j<data[cluster].length; j++){
                         obj = data[cluster][j];
                         // append movie to dict_movie_picture_info
-                        movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
-                        movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
-                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=j)
                         // append movie to html
-                        htmlString += movieViewShortActor(obj, movie_info_elem_id, movie_picture_elem_id);
+                        htmlString += getMovieViewShort(obj, elem_ids, type='else');
                     }
                     htmlString += "</div>";
                 }
