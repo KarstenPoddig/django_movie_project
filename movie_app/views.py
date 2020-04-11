@@ -10,6 +10,7 @@ from django.db import connection
 from movie_app.recommendation_models import load_data
 from movie_app.suggestions_cluster import update_movie_clusters
 from movie_app.suggestions_actor import get_movie_suggestions_actor
+from movie_app.rated_movies_cluster import get_rated_movies_clustered
 import requests
 
 """
@@ -502,7 +503,6 @@ def suggestions_cluster_data(request):
     # by suggestions from other clusters. This means two movies won't
     # be suggested by ratings from several clusters
     already_suggested_movies = rated_movies.movie_id.unique()
-    cluster_displayed = 1
     for cluster in clusters:
         cluster = int(cluster)
         rated_movies_cluster = rated_movies[rated_movies.cluster == cluster]
@@ -518,13 +518,24 @@ def suggestions_cluster_data(request):
         movies_cluster.fillna('', inplace=True)
         movies_cluster.to_dict('records')
         movies_cluster = movies_cluster.to_dict('records')
-        result_suggested_movies_cluster[cluster_displayed] = movies_cluster
-        cluster_displayed += 1
+        cluster_name = 'Cluster ' + str(int(cluster))
+        result_suggested_movies_cluster[cluster_name] = movies_cluster
     return HttpResponse(json.dumps(result_suggested_movies_cluster), 'application/json')
 
 
 def suggestions_actor_data(request):
     user = request.user
     data = get_movie_suggestions_actor(user=user)
+    return HttpResponse(json.dumps(data),
+                        'application/json')
+
+
+class RatedMoviesClusterView(TemplateView):
+    template_name = 'movie_app/rated_movies_cluster.html'
+
+
+def rated_movies_cluster_data(request):
+    user = request.user
+    data = get_rated_movies_clustered(user=user)
     return HttpResponse(json.dumps(data),
                         'application/json')

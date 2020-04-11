@@ -479,7 +479,7 @@ var getMovieSuggestionsActor = function(){
                 for(var i=0; i < actors.length; i++){
                     actor = actors[i]
                     //console.log(data[cluster])
-                    htmlString += "<h3>Cluster " + actor + "</h3>"
+                    htmlString += "<h3>" + actor + "</h3>"
                     htmlString += "<div class='scrollmenu'>";
                     for(var j=0; j<data[actor].length; j++){
                         obj = data[actor][j];
@@ -503,4 +503,54 @@ var getMovieSuggestionsActor = function(){
             }
         }
     });
+}
+
+var getRatedMoviesClustered = function(){
+
+    $('#clustered_movie_loader').show();
+
+    $.ajax({
+        type: 'GET',
+        url: url_rated_movies_cluster_data,
+        dataType: 'json',
+        cache: true,
+        success: function(data){
+            console.log(data)
+            htmlString = '';
+            // catch errors
+            if(Object.keys(data)[0]=="error"){
+                htmlString = data["error"]
+            }
+            // display movie suggestions
+            else{
+                clusters = Object.keys(data)
+                for(var i=0; i < clusters.length; i++){
+                    cluster = clusters[i]
+                    //console.log(data[cluster])
+                    htmlString += "<h3>" + cluster + "</h3>"
+                    htmlString += "<div class='scrollmenu'>";
+                    for(var j=0; j<data[cluster].length; j++){
+                        obj = data[cluster][j];
+                        // append movie to dict_movie_picture_info
+                        movie_info_elem_id = createMovieInfoElemId(cluster, obj.movieId);
+                        movie_picture_elem_id = createMoviePictureElemId(cluster, obj.movieId);
+                        dict_movie_picture_info[movie_picture_elem_id] = movie_info_elem_id;
+                        // append movie to html
+                        htmlString += movieViewShortActor(obj, movie_info_elem_id, movie_picture_elem_id);
+                    }
+                    htmlString += "</div>";
+                }
+            }
+            document.getElementById('clustered_movie_area').innerHTML = htmlString;
+
+            $('#clustered_movie_loader').hide();
+
+            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
+            for(var i=0; i<movie_info_elements.length; i++){
+                movie_info_elements[i].hidden = true;
+            }
+
+
+        }
+    })
 }

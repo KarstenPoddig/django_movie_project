@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content_outer %}
+
+    {% if request.user.is_authenticated %}
+
+    <h2>Your clustered movies</h2>
+
+    <div class="container_loader" id="clustered_movie_loader">
+        <div class="loader"></div>
+        <p>Loading ...</p>
+    </div>
+
+    <div id="clustered_movie_area"></div>
+
+    {% load static %}
+    <script type="text/javascript" src="{% static 'js/base_movie.js' %}"></script>
+
+    <script type="text/javascript">
+        // if user is logged in, search movie suggestions based on actors
+        getRatedMoviesClustered();
+    </script>
+
+    {% endif %}
+
+{% endblock %}

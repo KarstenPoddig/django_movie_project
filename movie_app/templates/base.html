@@ -21,6 +21,7 @@
             var url_suggestions_cluster_data = '{% url 'suggestions-cluster-data' %}';
             var url_suggestions_similar_movies_data = '{% url 'suggestions-similar-movies-data' %}';
             var url_suggestions_actor_data = '{% url 'suggestions-actor-data' %}';
+            var url_rated_movies_cluster_data = '{% url 'rated-movies-cluster-data' %}';
         </script>
 
     </head>
@@ -31,11 +32,14 @@
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'all-movies-overview' %}">All Movies</a>
             <a href="{% url 'rated-movies-overview' %}">Rated Movies</a>
+            <ul style="list-style-type:none">
+                <li><a href="{% url 'rated-movies-cluster' %}">Clusters of Rated Movies</a></li>
+            </ul>
             <a href="">Suggestions</a>
             <ul style="list-style-type:none">
-                <li><a href="{% url 'suggestions-cluster-template' %}">Clusters</a></li>
-                <li><a href="{% url 'suggestions-similar-movies-template' %}">Similar Movies</a></li>
-                <li><a href="{% url 'suggestions-actor-template' %}">Actors</a></li>
+                <li><a href="{% url 'suggestions-cluster' %}">Clusters</a></li>
+                <li><a href="{% url 'suggestions-similar-movies' %}">Similar Movies</a></li>
+                <li><a href="{% url 'suggestions-actor' %}">Actors</a></li>
             </ul>
             {% if request.user.is_staff %}
             <hr>
