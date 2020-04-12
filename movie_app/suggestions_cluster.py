@@ -62,6 +62,8 @@ def get_clustered_movies(user):
     rated_movies = get_rated_movies_user(user)
     rated_movies = join_movies_to_row_index(movies=rated_movies)
     distance_rank_log_user = distance_rank_log[rated_movies.row_index, :]
+    # delete distance rank log to free memory
+    del distance_rank_log
     distance_rank_log_user = distance_rank_log_user[:, rated_movies.row_index]
     rated_movies['row_index'] = list(range(0, rated_movies.shape[0]))
     clustered_movies = initiate_clusters(movies=rated_movies,
@@ -148,7 +150,7 @@ def get_best_movie_of_cluster_1_for_cluster_2(movies, cluster_1, cluster_2, rand
 
 
 def cluster_algorithm_1(movies, distance_matrix):
-    nr_iter = 5000
+    nr_iter = 3000
     for cnt_iter in range(nr_iter):
         movies['cluster_tmp'] = movies['cluster']
         all_clusters = movies.cluster.unique()
