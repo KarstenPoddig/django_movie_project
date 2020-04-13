@@ -202,7 +202,7 @@ var getSingleMovie = function(search_elem, result_elem){
 
     $.ajax({
         type: 'GET',
-        url: url_movie_search_long,
+        url: url_movies_detail_data,
         dataType: 'json',
         cache: true,
         data: {
@@ -213,46 +213,47 @@ var getSingleMovie = function(search_elem, result_elem){
             'filter_genre': '',
             'filter_year': '',
         },
-         success: function(data){
+         success: function(json_result){
 
-            console.log(data['meta'])
+            console.log(json_result)
 
-            var obj = data['movies'][0];
-
-            result_elem.innerHTML = getMovieViewDetailed(obj);
-
-            var rating;
-            if (typeof(obj.rating)=='number'){
-                rating = obj.rating;
+            if(json_result['meta']['status'] == 'exception'){
+                result_elem.innerHTML = json_result['meta']['message'];
             }
-            else{
-                rating = 0;
-            }
-
-            $('#rateyo_' + obj.movieId).rateYo({
-                numStars: 5,
-                halfStar: true,
-                rating: rating
-            }).on('rateyo.set', function(e, data){
-                var movieId = this.id.split("_")[1]
-                $.ajax({
-                    'type': 'POST',
-                    'url': url_rate_movie,
-                    'data': {
-                        'movieId': movieId,
-                        'rating': data.rating,
-                        'csrfmiddlewaretoken': getCookie("csrftoken")
-                    }
+            else {
+                obj = json_result['data'][0]
+                result_elem.innerHTML = getMovieViewDetailed(obj);
+                var rating;
+                if (typeof(obj.rating)=='number'){
+                    rating = obj.rating;
+                }
+                else{
+                    rating = 0;
+                }
+                $('#rateyo_' + obj.movieId).rateYo({
+                    numStars: 5,
+                    halfStar: true,
+                    rating: rating
+                }).on('rateyo.set', function(e, data){
+                    var movieId = this.id.split("_")[1]
+                    $.ajax({
+                        'type': 'POST',
+                        'url': url_rate_movie,
+                        'data': {
+                            'movieId': movieId,
+                            'rating': data.rating,
+                            'csrfmiddlewaretoken': getCookie("csrftoken")
+                        }
+                    });
                 });
-            });
-            getSimilarMovies(movieId = obj.movieId);
+                getSimilarMovies(movieId = obj.movieId);
+            }
          },
          error: function(){
             result_elem.innerHTML = 'Server Error'
          }
     });
 };
-
 
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
 var getMovieViewDetailed = function(obj){
