@@ -10,6 +10,8 @@ def get_movie_suggestions_actor(user):
                                                 'movie__nrRatings',
                                                 'rating')
     )
+    if rated_movies.empty:
+        return {}
     movies_with_actors = pd.DataFrame.from_records(
         MoviePerson.objects.filter(movie__movieId__in=rated_movies.movie__movieId,
                                    role_id=0).values('movie__movieId', 'person__personId')

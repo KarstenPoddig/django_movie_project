@@ -234,7 +234,8 @@ def get_nr_results_movie_query(term, filter_genre, filter_year,
     return query
 
 
-def movie_search_long(request):
+def movies_detail_data(request):
+    # TODO: Re-design output (json-file) with meta data, status, error, etc
     """This function collects the movie information for the tabs
      "All Movies" and "Rated Movies" and returns it as json"""
 
@@ -245,43 +246,69 @@ def movie_search_long(request):
     filter_genre = request.GET.get('filter_genre', '')
     filter_year = request.GET.get('filter_year', '')
     page_number = int(request.GET.get('page_number', 1))
+    user_id = int(request.user.id)
 
+    nr_results_total = get_nr_movies(term=term, filter_genre=filter_genre,
+                                     filter_year=filter_year,
+                                     only_rated_movies=only_rated_movies,
+                                     user_id=user_id)
+    nr_pages_total = int(np.ceil(nr_results_total/nr_results_shown))
+    page_number = min(nr_pages_total, page_number)
+    # perform the actual query
+    if nr_results_total == 0:
+        output_dict = get_json_output(status='exception',
+                                      message="You didn't rate any movies.")
+    else:
+        data = get_movie_detail_info(term=term, filter_genre=filter_genre,
+                                     filter_year=filter_year,
+                                     only_rated_movies=only_rated_movies,
+                                     page_number=page_number,
+                                     nr_results_shown=nr_results_shown,
+                                     user_id=user_id)
+        additional_meta_dict = {'nr_results_total': nr_results_total,
+                                'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
+                                'page_number': page_number,
+                                'nr_results_shown': nr_results_shown}
+        output_dict = get_json_output(status='normal', data=data,
+                                      additional_meta_dict=additional_meta_dict)
+    return HttpResponse(json.dumps(output_dict), 'application/json')
+
+
+def get_nr_movies(term, filter_genre, filter_year, only_rated_movies, user_id):
     cursor = connection.cursor()
     # compute the total number of results
     cursor.execute(get_nr_results_movie_query(term=term,
                                               filter_genre=filter_genre,
                                               filter_year=filter_year,
                                               only_rated_movies=only_rated_movies,
-                                              user_id=request.user.id))
-    nr_results_total = cursor.fetchone()[0]
-    nr_pages_total = int(np.ceil(nr_results_total/nr_results_shown))
-    page_number = min(nr_pages_total, page_number)
-    # perform the actual query
+                                              user_id=user_id))
+    nr_results = int(cursor.fetchone()[0])
+    return nr_results
+
+
+def get_movie_detail_info(term, filter_genre, filter_year, only_rated_movies,
+                          page_number, nr_results_shown, user_id):
+    cursor = connection.cursor()
     cursor.execute(build_movie_query(term=term,
                                      filter_genre=filter_genre,
                                      filter_year=filter_year,
                                      only_rated_movies=only_rated_movies,
                                      page_number=page_number,
                                      nr_results_shown=nr_results_shown,
-                                     user_id=request.user.id))
+                                     user_id=user_id))
     movies = cursor.fetchall()
     movies = pd.DataFrame(movies)
-
-    # if result is not empty rename the columns
     if not movies.empty:
         movies.columns = ['movieId', 'title', 'year', 'production', 'country', 'urlMoviePoster',
                           'imdbRating', 'actor', 'director', 'writer', 'rating', 'genre']
     movies.replace(np.nan, '', inplace=True)
     movies = movies.to_dict('records')
-    output_dict = {'meta': {'nr_results_total': nr_results_total,
-                            'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
-                            'page_number': page_number,
-                            'nr_results_shown': nr_results_shown},
-                   'movies': movies}
-    return HttpResponse(json.dumps(output_dict), 'application/json')
+    return movies
 
 
 def rate_movie(request):
+    # TODO: Change clustering behaviour
+    # TODO: Re-design output (json-file) with meta data, status, error, etc
     """This function is used to set ratings of movies"""
     # Preprocessing: reading parameters from the request
     movieId = int(request.GET.get('movieId'))
@@ -473,6 +500,7 @@ def get_movies(movie_ids):
 
 
 def suggestions_cluster_data(request):
+    # TODO: Re-design output (json-file) with meta data, status, error, etc
     user = request.user
     # check if the cluster algorithm is performed right now
     # (this is sometimes the case if this view is called shortly after rating some movies).
@@ -526,7 +554,13 @@ def suggestions_cluster_data(request):
 def suggestions_actor_data(request):
     user = request.user
     data = get_movie_suggestions_actor(user=user)
-    return HttpResponse(json.dumps(data),
+    if len(data.keys()) == 0:
+        output_dict = get_json_output(status='exception',
+                                      message="You didn't rate any movies.")
+    else:
+        output_dict = get_json_output(status='normal',
+                                      data=data)
+    return HttpResponse(json.dumps(output_dict),
                         'application/json')
 
 
@@ -537,5 +571,22 @@ class RatedMoviesClusterView(TemplateView):
 def rated_movies_cluster_data(request):
     user = request.user
     data = get_rated_movies_clustered(user=user)
-    return HttpResponse(json.dumps(data),
+    if len(data.keys()) == 0:
+        output_dict = get_json_output(status='exception',
+                                      message="You didn't rate any movies.")
+    else:
+        output_dict = get_json_output(status='normal',
+                                      data=data)
+    return HttpResponse(json.dumps(output_dict),
                         'application/json')
+
+
+def get_json_output(status, message='', additional_meta_dict={}, data=[]):
+    output_dict = {'meta': {'status': status,
+                            'message': message},
+                   'data': data}
+    # check if additional meta data
+    if len(additional_meta_dict.keys()) > 0:
+        for key in additional_meta_dict.keys():
+            output_dict['meta'][key] = additional_meta_dict[key]
+    return output_dict

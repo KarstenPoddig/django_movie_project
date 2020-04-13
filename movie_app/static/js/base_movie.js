@@ -116,7 +116,7 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
 
     $.ajax({
         type: 'GET',
-        url: url_movie_search_long,
+        url: url_movies_detail_data,
         dataType: 'json',
         cache: true,
         data: {
@@ -127,37 +127,35 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
             'filter_genre': filter_dict['Genre'].join(','),
             'filter_year': filter_dict['Year'].join(','),
         },
-         success: function(data){
+         success: function(json_result){
             // disable loading symbol
             $('#movie_loader').hide();
 
-            console.log(data)
+            console.log(json_result)
 
             // create navigation area
-            result_nav_elem_top.innerHTML = createResultNavHTML(data['meta'])
+            result_nav_elem_top.innerHTML = createResultNavHTML(json_result['meta'])
             result_nav_elem_bottom.innerHTML = result_nav_area_top.innerHTML;
 
-            console.log(data['meta'])
-            //
             result_elem.innerHTML = '';
 
-            if(data == null){
-                result_elem.innerHTML  = "You didn't rate any movies yet.";
+            if(json_result['meta']['status'] == 'exception'){
+                result_elem.innerHTML  = json_result['meta']['message'];
                 return;
             }
-
+            data = json_result['data']
             var htmlString = '';
 
-            for(var i=0; i<data['movies'].length; i++){
-                var obj = data['movies'][i];
+            for(var i=0; i<data.length; i++){
+                var obj = data[i];
                 htmlString+= getMovieViewDetailed(obj)
 
             };
             result_elem.innerHTML += htmlString
 
             // setting and changing the rating
-            for(var i=0; i<data['movies'].length; i++){
-                var obj = data['movies'][i];
+            for(var i=0; i<data.length; i++){
+                var obj = data[i];
                 var rating;
 
                 if (typeof(obj.rating)=='number'){
@@ -435,15 +433,16 @@ var getMovieSuggestionsActor = function(){
         url: url_suggestions_actor_data,
         dataType: 'json',
         cache: true,
-        success: function(data){
-            console.log(data)
+        success: function(json_result){
+            console.log(json_result)
             htmlString = '';
             // catch errors
-            if(Object.keys(data)[0]=="error"){
-                htmlString = data["error"]
+            if(json_result['meta']['status']=='exception'){
+                htmlString = json_result['meta']['message']
             }
             // display movie suggestions
             else{
+                data = json_result['data']
                 actors = Object.keys(data)
                 for(var i=0; i < actors.length; i++){
                     actor = actors[i]
@@ -481,15 +480,16 @@ var getRatedMoviesClustered = function(){
         url: url_rated_movies_cluster_data,
         dataType: 'json',
         cache: true,
-        success: function(data){
-            console.log(data)
+        success: function(json_result){
+            console.log(json_result)
             htmlString = '';
             // catch errors
-            if(Object.keys(data)[0]=="error"){
-                htmlString = data["error"]
+            if(json_result['meta']['status'] == 'exception'){
+                htmlString = json_result['meta']['message']
             }
             // display movie suggestions
             else{
+                data = json_result['data']
                 clusters = Object.keys(data)
                 for(var i=0; i < clusters.length; i++){
                     cluster = clusters[i]

@@ -48,15 +48,15 @@ class Role(models.Model):
 
 class MoviePerson(models.Model):
     """Model which people worked in which role on a movie"""
-    movie = models.ForeignKey('Movie', on_delete=models.SET_NULL, null=True)
-    person = models.ForeignKey('Person', on_delete=models.SET_NULL, null=True)
-    role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True)
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, null=True)
+    person = models.ForeignKey('Person', on_delete=models.CASCADE, null=True)
+    role = models.ForeignKey('Role', on_delete=models.CASCADE, null=True)
 
 
 class MovieGenre(models.Model):
     """"Model saves the association of a movie to a genre"""
-    movie = models.ForeignKey('Movie', on_delete=models.SET_NULL, null=True)
-    genre = models.ForeignKey('Genre', on_delete=models.SET_NULL, null=True)
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, null=True)
+    genre = models.ForeignKey('Genre', on_delete=models.CASCADE, null=True)
 
 
 class Language(models.Model):
@@ -67,8 +67,8 @@ class Language(models.Model):
 
 class MovieLanguage(models.Model):
     """Model saves the association of a movie to a language"""
-    movie = models.ForeignKey('Movie', on_delete=models.SET_NULL, null=True)
-    language = models.ForeignKey('Language', on_delete=models.SET_NULL, null=True)
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, null=True)
+    language = models.ForeignKey('Language', on_delete=models.CASCADE, null=True)
 
 
 from django.contrib.auth.models import User
@@ -76,15 +76,15 @@ from django.contrib.auth.models import User
 
 class Rating(models.Model):
     """Model saves the ratings of users"""
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    movie = models.ForeignKey('Movie', on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, null=True)
     rating = models.FloatField()
     cluster = models.IntegerField(null=True)
 
 
 class ClusteringStatus(models.Model):
     """Model stores the status of the clustering algorithm for the movies of users"""
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=20, null=True)
 
 

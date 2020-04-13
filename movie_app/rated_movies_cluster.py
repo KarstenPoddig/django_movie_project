@@ -21,6 +21,8 @@ def get_rated_movies_clustered(user):
                             'year', 'urlMoviePoster', 'country', 'nrRatings',
                             'runtime']
     clusters = rated_movies.cluster.unique()
+    if len(clusters) == 1 and clusters[0] is None:
+        clusters[0] = np.nan
     clusters.sort()
     output_dict = {}
     for cluster in clusters:
@@ -37,4 +39,3 @@ def get_rated_movies_clustered(user):
         result = result.to_dict('records')
         output_dict[cluster_name] = result
     return output_dict
-

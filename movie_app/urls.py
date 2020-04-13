@@ -4,8 +4,13 @@ from . import views
 urlpatterns = [
     path('', views.HomeView.as_view(), name='home'),
     path('movie_search_short/<int:only_rated_movies>/', views.movie_search_short, name='movie-search-short'),
-    path('movies_search_long/', views.movie_search_long, name='movie-search-long'),
+
+
+    # All Movies
+    # path of template page
     path('movies/', views.AllMovies.as_view(), name='all-movies-overview'),
+    # path of data json
+    path('movies_detail_data/', views.movies_detail_data, name='movies-detail-data'),
 
 
     # Rated Movies
