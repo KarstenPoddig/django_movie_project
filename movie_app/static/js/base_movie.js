@@ -63,7 +63,6 @@ var initFilters = function(){
 // Movie Functionalities
 
 var createResultNavHTML = function(meta_data){
-    console.log(meta_data);
     htmlString = '';
     var last_page = Math.ceil(meta_data['nr_results_total'] / meta_data['nr_results_shown'])
     // if page_number > 1 create previous button
@@ -261,23 +260,23 @@ var getMovieViewDetailed = function(obj){
         "<div class='movie_view_detailed_complete'>" +
             "<img src=" + obj.urlMoviePoster + " class='img_movie_view_detailed'>" +
             "<div class='movie_view_detailed_info' id=" + obj.movieId + ">" +
-                "<div class ='row' style='background-color: #dee9fa; margin-left: 0px; margin-right: 0px;'>" +
-                    "<div class='movie_title_wrapper' style='margin: 0 10px; font-weight: bold; font-size: x-large;'>" +
+                "<div class ='row' style='background-color: #dee9fa;'>" +
+                    "<div class='movie_title_wrapper' style='margin: 0 5px; font-weight: bold; font-size: 20px;'>" +
                         obj.title +
                     "</div>" +
                 "</div>" +
-                "<div class='row' style='margin-left: 0px; margin-right: 0px; padding: 5px 5px;'>" +
-                    "<div class='col-sm-7'>" +
-                        "<p>" + obj.year + ", " +
+                "<div class='row' style='padding: 4px 4px;'>" +
+                    "<div class='col-sm-8' style='align-items: center;'>" +
+                        "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'>" + obj.year + ", " +
                                 obj.country + ", " +
                                 obj.production +
                          "</p>" +
-                         "<p> Actors: " + obj.actor + "</p>" +
-                         "<p> Director: " + obj.director + "</p>" +
-                         "<p> Writer: " + obj.writer + "</p>" +
-                         "<p> Genre: " + obj.genre + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Actors: </b>" + obj.actor + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Director: </b>" + obj.director + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Writer: </b>" + obj.writer + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Genre: </b>" + obj.genre + "</p>" +
                     "</div>" +
-                    "<div class='col-sm-2'>" +
+                    "<div class='col-sm-4'>" +
                         "<div class='rateyo' id='rateyo_" + obj.movieId + "'></div>" +
                         "<p>Imdb-Rating: " + obj.imdbRating + "</p>" +
                     "</div>" +
@@ -303,8 +302,8 @@ var getMovieViewShort = function(obj, elem_ids, type){
     htmlString = "<div class='suggested_movie_complete'>" +
                     "<img src=" + obj.urlMoviePoster + " class='img_suggestion' id='" + movie_picture_elem_id + "' onclick='toggleMovieInfo(this);'>" +
                     "<div class='movie_view_short_info' id='" + movie_info_elem_id +"'>" +
-                        "<div class ='row' style='background-color: #dee9fa;margin-right: 0px; margin-left: 0px;'>" +
-                            "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: x-large;'>" +
+                        "<div class ='row' style='background-color: #dee9fa;'>" +
+                            "<div class='movie_title_wrapper' style='padding: 5px 5px; font-weight: bold; font-size: 20px;'>" +
                                 obj.title +
                             "</div>" +
                         "</div>" +
@@ -390,7 +389,7 @@ var getMovieSuggestionsCluster = function(){
                 for(var i=0; i < clusters.length; i++){
                     cluster = clusters[i]
                     //console.log(data[cluster])
-                    htmlString += "<h3>Cluster " + cluster + "</h3>"
+                    htmlString += "<h4>" + cluster + "</h4>"
                     htmlString += "<div class='scrollmenu'>";
                     for(var j=0; j<data[cluster].length; j++){
                         obj = data[cluster][j];
@@ -448,7 +447,7 @@ var getMovieSuggestionsActor = function(){
                 for(var i=0; i < actors.length; i++){
                     actor = actors[i]
                     //console.log(data[cluster])
-                    htmlString += "<h3>" + actor + "</h3>"
+                    htmlString += "<h4>" + actor + "</h4>"
                     htmlString += "<div class='scrollmenu'>";
                     for(var j=0; j<data[actor].length; j++){
                         obj = data[actor][j];
@@ -495,7 +494,7 @@ var getRatedMoviesClustered = function(){
                 for(var i=0; i < clusters.length; i++){
                     cluster = clusters[i]
                     //console.log(data[cluster])
-                    htmlString += "<h3>" + cluster + "</h3>"
+                    htmlString += "<h4>" + cluster + "</h4>"
                     htmlString += "<div class='scrollmenu'>";
                     for(var j=0; j<data[cluster].length; j++){
                         obj = data[cluster][j];
@@ -515,8 +514,46 @@ var getRatedMoviesClustered = function(){
             for(var i=0; i<movie_info_elements.length; i++){
                 movie_info_elements[i].hidden = true;
             }
+        }
+    })
+}
 
+
+var get_quality_of_profile = function(){
+
+    $.ajax({
+        type: 'GET',
+        url: url_quality_of_profile,
+        dataType: 'json',
+        cache: true,
+        success: function(json_result){
+
+            profile_quality_elem = document.getElementById('profile_quality_status')
+
+            profile_quality_elem.innerHTML =
+                "<div class='row'>" +
+                    "<div class='col-sm-11' align='center'>" +
+                        "<h4 style='font-weight: bold;'>Quality of your profile</h4>" +
+                    "</div>" +
+                    "<div class='col-sm-1' align='right' style='height: 10px' onclick='closeQualityProfileInfo();'>" +
+                        "<div class='profile_quality_close_btn'>X</div>" +
+                    "</div>" +
+                "</div>" +
+                "<div class='row'>" +
+                    "<div class=col-sm-5 style='font-size: 20px;'>" +
+                        "<p>Status: "   + json_result['data']['status']          + "</p>" +
+                    "</div>" +
+                    "<div class=col-sm-5>" +
+                        "<p>You rated " + json_result['data']['nr_rated_movies'] + " movies</p>" +
+                    "</div>" +
+                "</div>" +
+                "<p style='padding-left: 15px;'>" + json_result['data']['note'] + "</p>";
 
         }
     })
+}
+
+var closeQualityProfileInfo = function(){
+    var elem = document.getElementById('profile_quality_status');
+    elem.hidden = true;
 }

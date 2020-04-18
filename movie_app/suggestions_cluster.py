@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import random
-from movie_app.models import Rating, Movie, ClusteringStatus
+from movie_app.models import Rating, Movie, ClusteringStatus, Cluster
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
 import math
 
@@ -48,12 +48,22 @@ def update_movie_clusters(user, movieId, rating_action):
 def compute_new_clusters_movies(user):
     clustered_movies = get_clustered_movies(user)
     # saving the results
-    for movieId in clustered_movies.index:
-        entry = clustered_movies.loc[movieId]
-        r = Rating.objects.filter(user=user,
-                                  movie__movieId=movieId)[0]
-        r.cluster = entry.cluster
-        r.save()
+    clusters = clustered_movies.cluster.unique()
+    for cluster in clusters:
+        cluster_entry = Cluster(user=user)
+        cluster_entry.save()
+        clustered_movies_cluster = clustered_movies[clustered_movies.cluster == cluster]
+        for movieId in clustered_movies_cluster.index:
+            r = Rating.objects.filter(user=user,
+                                      movie__movieId=movieId)[0]
+            r.cluster = cluster_entry
+            r.save()
+    # for movieId in clustered_movies.index:
+    #     entry = clustered_movies.loc[movieId]
+    #     r = Rating.objects.filter(user=user,
+    #                               movie__movieId=movieId)[0]
+    #     r.cluster = entry.cluster
+    #     r.save()
     return None
 
 
@@ -69,15 +79,18 @@ def get_clustered_movies(user):
     clustered_movies = initiate_clusters(movies=rated_movies,
                                          distance_matrix=distance_rank_log_user)
     print('Preclustering of movies done.')
-    clustered_movies = cluster_algorithm_1(movies=clustered_movies,
-                                           distance_matrix=distance_rank_log_user)
+    # clustered_movies = cluster_algorithm_1(movies=clustered_movies,
+    #                                        distance_matrix=distance_rank_log_user)
     return clustered_movies
 
 
 def assign_movie_to_cluster(user, movieId):
     rated_movies = get_rated_movies_user(user)
-    cluster = get_best_cluster_for_movie(movies=rated_movies,
+    cluster_id = get_best_cluster_for_movie(movies=rated_movies,
                                          movieId=movieId)
+    if cluster_id is None:
+        return None
+    cluster = Cluster.objects.get(id=cluster_id)
     # store cluster for movie
     movie = Movie.objects.get(movieId=movieId)
     rating_entry = Rating.objects.filter(user=user,
@@ -90,18 +103,18 @@ def assign_movie_to_cluster(user, movieId):
 
 def get_best_cluster_for_movie(movies, movieId):
     # if there are no rated movies or the aren't clustered return None
-    if movies.empty or movies.cluster.unique()[0] is None:
+    if movies.empty or movies.cluster_id.unique()[0] is None:
         return None
     movies = join_movies_to_row_index(movies)
     distance_matrix = load_distance_matrix()
     movies['rank_log'] = distance_matrix[movies.row_index.astype('int'),
                                          int(movies.loc[movieId].row_index)]
     # return cluster where the sum of distances is minimal
-    return movies.groupby('cluster')[['rank_log']].mean().sort_values(by='rank_log').index[0]
+    return movies.groupby('cluster_id')[['rank_log']].mean().sort_values(by='rank_log').index[0]
 
 
 def get_nr_movies_per_cluster(nr_all_movies):
-    nr_clusters = min(3+0.02*nr_all_movies, 10)
+    nr_clusters = min(2+0.05*nr_all_movies, 8)
     nr_movies_per_cluster = int(np.ceil(nr_all_movies/nr_clusters))
     return nr_movies_per_cluster
 
@@ -179,6 +192,3 @@ def cluster_algorithm_1(movies, distance_matrix):
                   ' Old (partial) score:' + str(round(score_cluster_1_old + score_cluster_2_old, 2)) +
                   ' New (partial) score:' + str(round(score_cluster_1_new + score_cluster_2_new, 2)))
     return movies
-
-
-

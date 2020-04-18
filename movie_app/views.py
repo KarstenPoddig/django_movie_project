@@ -11,7 +11,6 @@ from movie_app.recommendation_models import load_data
 from movie_app.suggestions_cluster import update_movie_clusters
 from movie_app.suggestions_actor import get_movie_suggestions_actor
 from movie_app.rated_movies_cluster import get_rated_movies_clustered
-import requests
 
 """
 ################### General comments ##############################################
@@ -246,25 +245,25 @@ def movies_detail_data(request):
     filter_genre = request.GET.get('filter_genre', '')
     filter_year = request.GET.get('filter_year', '')
     page_number = int(request.GET.get('page_number', 1))
-    user_id = int(request.user.id)
+    # user_id = int(request.user.id)
 
     nr_results_total = get_nr_movies(term=term, filter_genre=filter_genre,
                                      filter_year=filter_year,
                                      only_rated_movies=only_rated_movies,
-                                     user_id=user_id)
+                                     user_id=request.user.id)
     nr_pages_total = int(np.ceil(nr_results_total/nr_results_shown))
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
     if nr_results_total == 0:
         output_dict = get_json_output(status='exception',
-                                      message="You didn't rate any movies.")
+                                      message='No results found.')
     else:
         data = get_movie_detail_info(term=term, filter_genre=filter_genre,
                                      filter_year=filter_year,
                                      only_rated_movies=only_rated_movies,
                                      page_number=page_number,
                                      nr_results_shown=nr_results_shown,
-                                     user_id=user_id)
+                                     user_id=request.user.id)
         additional_meta_dict = {'nr_results_total': nr_results_total,
                                 'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
                                 'page_number': page_number,
@@ -577,6 +576,35 @@ def rated_movies_cluster_data(request):
     else:
         output_dict = get_json_output(status='normal',
                                       data=data)
+    return HttpResponse(json.dumps(output_dict),
+                        'application/json')
+
+
+def quality_of_profile(request):
+    note = 'Test'
+
+    nr_rated_movies = Rating.objects.filter(user=request.user).count()
+
+    if nr_rated_movies < 20:
+        status = 'room for improvement'
+        note = "With more ratings you could get more reliable suggestions."
+    if 20 <= nr_rated_movies < 40:
+        status = "Almost Done!"
+        note = 'Just with a few more rated movies you could get significantly better result ' + \
+               'for your movie suggestions.'
+    if 40 <= nr_rated_movies < 60:
+        status = 'Good!'
+        note = 'You already have a good basis for the movie suggestions. ' + \
+               'Anyway the more movies you rate, the better the algorithms work.'
+    if nr_rated_movies >= 60:
+        status = 'Excellent'
+        note = 'You have a great basis for the movie suggestions. ' + \
+               'Anyway the more movies you rate, the better the algorithms work.'
+
+    output_dict = get_json_output(status='normal',
+                                  data={'nr_rated_movies': nr_rated_movies,
+                                        'status': status,
+                                        'note': note})
     return HttpResponse(json.dumps(output_dict),
                         'application/json')
 

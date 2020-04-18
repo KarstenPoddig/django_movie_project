@@ -5,7 +5,7 @@ body {
 
 .content {
     transition: margin-left .2s;
-    margin-left: 250px;
+    margin-left: 200px;
     overflow-x: hidden;
 }
 
@@ -13,7 +13,7 @@ body {
 /* The sidebar menu */
 .sidenav {
   height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 250px; /* Set the width of the sidebar */
+  width: 200px; /* Set the width of the sidebar */
   position: fixed; /* Fixed Sidebar (stay in place on scroll) */
   z-index: 1; /* Stay on top */
   top: 0; /* Stay at the top */
@@ -21,14 +21,14 @@ body {
   background-color: #4d638c;
   transition: 0.2s;
   overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 40px;
+  padding-top: 28px;
 }
 
 /* The navigation menu links */
 .sidenav a {
   padding: 6px 8px 6px 16px;
   text-decoration: none;
-  font-size: 25px;
+  font-size: 18px;
   color: white;
   display: block;
 }
@@ -47,58 +47,58 @@ body {
 }
 
 hr {
-    height: 5px;
-    border: 0px solid white;
-    border-top-width: 2px;
+    height:             5px;
+    border:             0px solid white;
+    border-top-width:   2px;
 }
 
 .top {
-  font-size: 25px; /* Increased text to enable scrolling */
+  font-size:        15px; /* Increased text to enable scrolling */
   background-color: #283654;
-  color: white;
-  padding: 5px;
+  color:            white;
+  padding:          3px;
 }
 
 .main {
-  font-size: 20px; /* Increased text to enable scrolling */
-  padding: 0px 20px;
+  font-size:        15px; /* Increased text to enable scrolling */
+  padding:          0px 15px;
 }
 
 .button {
   background-color: white;
-  border: none;
-  color: #1c1e24;
-  font-weight: bold;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 3px 1px;
-  cursor: pointer;
-  border-style: solid;
-  border-color: #283654;
-  border-width: 1px;
+  border:           none;
+  color:            #1c1e24;
+  font-weight:      bold;
+  padding:          12px 24px;
+  text-align:       center;
+  text-decoration:  none;
+  display:          inline-block;
+  font-size:        12px;
+  margin:           2px 1px;
+  cursor:           pointer;
+  border-style:     solid;
+  border-color:     #283654;
+  border-width:     1px;
 }
 
 
 .button:hover {
-    background-color: #4d638c;
-    border-color: #4d638c;
+    background-color:   #4d638c;
+    border-color:       #4d638c;
 }
 
 .button_small {
   background-color: white;
-  border: none;
-  color: #1c1e24;
-  font-weight: bold;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 14px;
-  margin: 3px 1px;
-  cursor: pointer;
+  border:           none;
+  color:            #1c1e24;
+  font-weight:      bold;
+  padding:          10px 20px;
+  text-align:       center;
+  text-decoration:  none;
+  display:          inline-block;
+  font-size:        14px;
+  margin:           3px 1px;
+  cursor:           pointer;
 }
 
 .button_small:hover {
@@ -165,37 +165,21 @@ h3 {
   scrollbar-color: #aaaaaa;
 }
 
-
-.similarity_class {
-    background-color: #fafcff;
-    width: 200px;
-    padding: 0px 0px;
-    display: inline-block;
-    vertical-align:top;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    margin-right: 20px;
-    white-space:normal;
-    -moz-box-shadow:    3px 3px 5px 2px #ccc;
-    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
-    box-shadow:         3px 3px 5px 2px #ccc;
-}
-
 /***************************** Movie View: Detailed **************************************************/
 
 .movie_view_detailed_complete {
-    height: 300px;
+    height: 210px;
     width: 100%;
     color: #1c1e24;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    margin-right: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-right: 15px;
     display: inline-block;
     vertical-align:top;
     white-space:normal;
-    -moz-box-shadow:    3px 3px 5px 2px #ccc;
-    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
-    box-shadow:         3px 3px 5px 2px #ccc;
+    -moz-box-shadow:    2px 2px 3px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 3px 1px #ccc;
+    box-shadow:         2px 2px 3px 1px #ccc;
 }
 
 .movie_view_detailed_info {
@@ -205,28 +189,29 @@ h3 {
     white-space:normal;
     vertical-align: top;
     height: 100%;
-    width: calc(100% - 200px);
+    width: calc(100% - 140px);
     float: right;
+    font-size: 14px;
 }
 
 .img_movie_view_detailed {
-    width: 200px;
+    width: 140px;
     height: 100%;
 }
 
 /********************** Movie View: Short (Suggestions, Similarity) *************************************/
 
 .suggested_movie_complete {
-    height: 250px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    margin-right: 20px;
+    height: 175px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-right: 15px;
     display: inline-block;
     vertical-align:top;
     white-space:normal;
-    -moz-box-shadow:    3px 3px 5px 2px #ccc;
-    -webkit-box-shadow: 3px 3px 5px 2px #ccc;
-    box-shadow:         3px 3px 5px 2px #ccc;
+    -moz-box-shadow:    2px 2px 3px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 3px 1px #ccc;
+    box-shadow:         2px 2px 3px 1px #ccc;
 }
 
 .movie_view_short_info {
@@ -246,8 +231,6 @@ h3 {
     opacity: 1.0;
 }
 
-
-
 /* Dropdown for Genre and Year Filter */
 
 .dropbtn {
@@ -256,6 +239,7 @@ h3 {
   padding: 16px;
   font-size: 16px;
   border: none;
+  margin: 3px 3px;
 }
 
 .dropdown {
@@ -299,8 +283,8 @@ h3 {
 
 .filter_area {
     background-color: #eeeeee;
-    padding-top: 10px;
-    padding: 15px;
+    padding-top: 7px;
+    padding: 10px;
 }
 
 
@@ -324,6 +308,11 @@ h3 {
     padding-left: 40%;
 }
 
+.row {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
 /* Sidenav-Button */
 
 .sidenav_button_container {
@@ -331,23 +320,39 @@ h3 {
 }
 
 .bar1, .bar2, .bar3 {
-  width: 35px;
-  height: 5px;
+  width: 30px;
+  height: 4px;
   background-color: white;
-  margin: 6px 0;
+  margin: 5px 0;
 }
-
-
 
 h2 {
     font-weight: bold;
     text-align: center;
-    margin-top: 20px;
     color: #283654;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
-h3 {
+h3, h4 {
     color: #283654;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.profile_quality {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: #dee9fa;
+    color: #283654;
+    border-color: #283654;
+    border-width: 2px;
+    border-style: solid;
+}
+
+.profile_quality_close_btn:hover {
+    background-color: #fafcff;
+    width: 15px;
 }

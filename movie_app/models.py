@@ -74,23 +74,21 @@ class MovieLanguage(models.Model):
 from django.contrib.auth.models import User
 
 
+class Cluster(models.Model):
+    """Model stores the existing Clusters and their description"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.CharField(max_length=100, null=True)
+
+
 class Rating(models.Model):
     """Model saves the ratings of users"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     movie = models.ForeignKey('Movie', on_delete=models.CASCADE, null=True)
     rating = models.FloatField()
-    cluster = models.IntegerField(null=True)
+    cluster = models.ForeignKey(Cluster, on_delete=models.SET_NULL, null=True)
 
 
 class ClusteringStatus(models.Model):
     """Model stores the status of the clustering algorithm for the movies of users"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=20, null=True)
-
-
-class MoviesSimilar(models.Model):
-    """Model saves the similarity scores (of the top movies)"""
-    baseMovie = models.ForeignKey(Movie, related_name='baseMovie', on_delete=models.SET_NULL, null=True)
-    similarMovie = models.ForeignKey(Movie, related_name='similarMovie', on_delete=models.SET_NULL, null=True)
-    similarity_score = models.FloatField()
-

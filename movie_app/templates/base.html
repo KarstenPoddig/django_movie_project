@@ -22,6 +22,7 @@
             var url_suggestions_similar_movies_data = '{% url 'suggestions-similar-movies-data' %}';
             var url_suggestions_actor_data = '{% url 'suggestions-actor-data' %}';
             var url_rated_movies_cluster_data = '{% url 'rated-movies-cluster-data' %}';
+            var url_quality_of_profile = '{% url 'quality-of-profile' %}';
         </script>
 
     </head>
@@ -32,11 +33,11 @@
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'all-movies-overview' %}">All Movies</a>
             <a href="{% url 'rated-movies-overview' %}">Rated Movies</a>
-            <ul style="list-style-type:none">
+            <ul style="list-style-type:none; padding-left: 20px;">
                 <li><a href="{% url 'rated-movies-cluster' %}">Clusters of Rated Movies</a></li>
             </ul>
             <a href="">Suggestions</a>
-            <ul style="list-style-type:none">
+            <ul style="list-style-type:none; padding-left: 20px;">
                 <li><a href="{% url 'suggestions-cluster' %}">Clusters</a></li>
                 <li><a href="{% url 'suggestions-similar-movies' %}">Similar Movies</a></li>
                 <li><a href="{% url 'suggestions-actor' %}">Actors</a></li>
@@ -58,9 +59,9 @@
                         </div>
                     </div>
                     <div class="col-sm-7" align="center">
-                        <h1>Movie App</h1>
+                        <h2 style='color: white;'>Movie App</h2>
                     </div>
-                    <div class="col-sm-4" align="right">
+                    <div class="col-sm-4" align="right" style="font-size: 20px;">
                         {% if user.is_authenticated %}
                         {{ user.username }}
                         <a href="{% url 'logout' %}?next={% url 'rated-movies-overview' %}">
@@ -79,6 +80,11 @@
             </div>
 
             <div class="main">
+
+                {% if user.is_authenticated %}
+                <div class="profile_quality" id="profile_quality_status"></div>
+                {% endif %}
+
                 {% block content_outer %}
                 {% endblock %}
 
@@ -110,6 +116,12 @@
 
         <script src="{% static 'js/main.js' %}" type="text/javascript"></script>
 
+        {% if user.is_authenticated %}
+        <script src="{% static 'js/base_movie.js' %}" type="text/javascript"></script>
+        <script type="text/javascript">
+            get_quality_of_profile();
+        </script>
+        {% endif %}
     </body>
 
 </html>

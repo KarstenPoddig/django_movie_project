@@ -54,4 +54,8 @@ urlpatterns = [
          name='suggestions-actor'),
     # path of data (json)
     path('suggestions_actor_data/', views.suggestions_actor_data, name='suggestions-actor-data'),
+
+
+    # Profile Quality
+    path('quality_of_profile/', views.quality_of_profile, name='quality-of-profile'),
 ]

@@ -16,14 +16,10 @@ function getCookie(c_name){
  }
 
 
-
-
-
-
 // Sidenav-menu-button
 function openNav() {
-  document.getElementById("mySidenav").style.width = "250px";
-  document.getElementById("content").style.marginLeft = "250px";
+  document.getElementById("mySidenav").style.width = "200px";
+  document.getElementById("content").style.marginLeft = "200px";
 }
 
 function closeNav() {
