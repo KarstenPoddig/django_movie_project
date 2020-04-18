@@ -240,6 +240,7 @@ def movies_detail_data(request):
 
     # Preprocessing: reading the parameters from the request
     term = request.GET.get('term', '')
+    term = term.replace("'", "%")
     only_rated_movies = int(request.GET.get('only_rated_movies', 0))
     nr_results_shown = int(request.GET.get('nr_results_shown', 10))
     filter_genre = request.GET.get('filter_genre', '')
