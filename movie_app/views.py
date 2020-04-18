@@ -391,7 +391,7 @@ the most similar movies. The result is returned in json format.
 """
 
 
-class SuggestionsClusterView(TemplateView):
+class SuggestionsClusterView(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/suggestions_cluster.html'
 
 
@@ -399,7 +399,7 @@ class SuggestionsSimilarMoviesView(TemplateView):
     template_name = 'movie_app/suggestions_similar_movies.html'
 
 
-class SuggestionsActorView(TemplateView):
+class SuggestionsActorView(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/suggestions_actor.html'
 
 
@@ -564,7 +564,7 @@ def suggestions_actor_data(request):
                         'application/json')
 
 
-class RatedMoviesClusterView(TemplateView):
+class RatedMoviesClusterView(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/rated_movies_cluster.html'
 
 
