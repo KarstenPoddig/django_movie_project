@@ -92,3 +92,14 @@ class ClusteringStatus(models.Model):
     """Model stores the status of the clustering algorithm for the movies of users"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=20, null=True)
+
+
+class GenomeTag(models.Model):
+    tagId = models.IntegerField(primary_key=True)
+    tag = models.CharField(max_length=70)
+
+
+class GenomeScore(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    tag = models.ForeignKey(GenomeTag, on_delete=models.CASCADE)
+    relevance = models.FloatField()
