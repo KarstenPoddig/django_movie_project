@@ -356,3 +356,17 @@ h3, h4 {
     background-color: #fafcff;
     width: 15px;
 }
+
+.cluster_tag_elem {
+    background-color: #4d638c;
+    border-radius: 5px;
+    color: white;
+    margin-right: 5px;
+    margin-legt: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.cluster_tag_wrapper {
+    display: flex;
+}

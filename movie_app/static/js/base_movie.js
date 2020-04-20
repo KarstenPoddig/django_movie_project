@@ -376,26 +376,32 @@ var getMovieSuggestionsCluster = function(){
         url: url_suggestions_cluster_data,
         dataType: 'json',
         cache: true,
-        success: function(data){
-            console.log(data)
+        success: function(json_result){
+            console.log(json_result)
             htmlString = '';
             // catch errors
-            if(Object.keys(data)[0]=="error"){
-                htmlString = data["error"]
+            if(json_result['meta']['status']=='exception'){
+                htmlString = json_result['meta']['message']
             }
             // display movie suggestions
             else{
+                data = json_result['data']
                 clusters = Object.keys(data)
                 for(var i=0; i < clusters.length; i++){
                     cluster = clusters[i]
                     //console.log(data[cluster])
-                    htmlString += "<h4>" + cluster + "</h4>"
-                    htmlString += "<div class='scrollmenu'>";
-                    for(var j=0; j<data[cluster].length; j++){
-                        obj = data[cluster][j];
-                        elem_ids = getMovieShortViewElemIds(movieId = obj.movieId, row=j)
+                    htmlString += "<h4>" + cluster + "</h4>" +
+                                  "<div class='row' align='center'>" +
+                                    "<div class='cluster_tag_wrapper' align='center'>" +
+                                        getClusterTagView(data[cluster]['tags']) +
+                                    "</div>" +
+                                  "</div>" +
+                                  "<div class='scrollmenu'>";
+                    for(var j=0; j<data[cluster]['movies'].length; j++){
+                        movie = data[cluster]['movies'][j];
+                        elem_ids = getMovieShortViewElemIds(movieId = movie.movieId, row=i)
                         // append movie to html
-                        htmlString += getMovieViewShort(obj=obj, elem_ids=elem_ids, type='prediction');
+                        htmlString += getMovieViewShort(obj=movie, elem_ids=elem_ids, type='prediction');
                     }
                     htmlString += "</div>";
                 }
@@ -493,15 +499,20 @@ var getRatedMoviesClustered = function(){
                 clusters = Object.keys(data)
                 for(var i=0; i < clusters.length; i++){
                     cluster = clusters[i]
-                    //console.log(data[cluster])
-                    htmlString += "<h4>" + cluster + "</h4>"
-                    htmlString += "<div class='scrollmenu'>";
-                    for(var j=0; j<data[cluster].length; j++){
-                        obj = data[cluster][j];
+                    // tag list
+                    htmlString += "<h4>" + cluster + "</h4>" +
+                                  "<div class='row' align='center'>" +
+                                    "<div class='cluster_tag_wrapper' align='center'>" +
+                                        getClusterTagView(data[cluster]['tags']) +
+                                    "</div>" +
+                                  "</div>" +
+                                  "<div class='scrollmenu'>";
+                    for(var j=0; j<data[cluster]['movies'].length; j++){
+                        movie = data[cluster]['movies'][j];
                         // append movie to dict_movie_picture_info
-                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=j)
+                        elem_ids = getMovieShortViewElemIds(movieId=movie.movieId, row=i)
                         // append movie to html
-                        htmlString += getMovieViewShort(obj, elem_ids, type='else');
+                        htmlString += getMovieViewShort(movie, elem_ids, type='else');
                     }
                     htmlString += "</div>";
                 }
@@ -518,6 +529,14 @@ var getRatedMoviesClustered = function(){
     })
 }
 
+var getClusterTagView = function(tags){
+    htmlString = '';
+    for(var i=0; i<tags.length; i++){
+        tag = tags[i];
+        htmlString += "<div class='cluster_tag_elem'>" + tag + "</div>"
+    }
+    return htmlString
+}
 
 var get_quality_of_profile = function(){
 

@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from movie_app.models import Movie, Rating, ClusteringStatus
+from movie_app.models import Movie, Rating, ClusteringStatus, Cluster
 from django.http import HttpResponse
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -500,40 +500,42 @@ def get_movies(movie_ids):
 
 
 def suggestions_cluster_data(request):
-    # TODO: Re-design output (json-file) with meta data, status, error, etc
     user = request.user
     # check if the cluster algorithm is performed right now
     # (this is sometimes the case if this view is called shortly after rating some movies).
     # return then a corresponding message
     clustering_status = ClusteringStatus.objects.filter(user=user)[0].status
     if clustering_status == 'Pending':
-        return HttpResponse(json.dumps({'error':
-                                        'Your movies are clustered right now (because you added ' +
-                                        'or deleted one or more of your ratings. Please wait a ' +
-                                        'minute or two and try again.'}),
+        output_dict = get_json_output(status='exception',
+                                      message='Your movies are clustered right now (because you added ' +
+                                              'or deleted one or more of your ratings. Please wait a ' +
+                                              'minute or two and try again.')
+        return HttpResponse(json.dumps(output_dict),
                             'application/json')
 
     rated_movies = pd.DataFrame.from_records(
-        Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster')
+        Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster_id')
     )
     if rated_movies.empty:
-        return HttpResponse(json.dumps({'error':
-                                        "You didn't rate any movies " +
-                                        "yet."}),
+        output_dict = get_json_output(status='exception',
+                                      message="You didn't rate any movies yet.")
+        return HttpResponse(json.dumps(output_dict),
                             'application/json')
     # get unique clusters (besides of not clustered movies)
-    mean_ratings_clusters = rated_movies[~rated_movies.cluster.isna()].groupby('cluster')[['rating']].mean(). \
+    mean_ratings_clusters = rated_movies[~rated_movies.cluster_id.isna()].groupby('cluster_id')[['rating']].mean(). \
         sort_values(by='rating', ascending=False)
-    clusters = mean_ratings_clusters.index
+    cluster_ids = mean_ratings_clusters.index
     # clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
     result_suggested_movies_cluster = {}
     # this variable stores the movies which are already suggested
     # by suggestions from other clusters. This means two movies won't
     # be suggested by ratings from several clusters
+    data_dict = {}
     already_suggested_movies = rated_movies.movie_id.unique()
-    for cluster in clusters:
-        cluster = int(cluster)
-        rated_movies_cluster = rated_movies[rated_movies.cluster == cluster]
+    for cluster_id in cluster_ids:
+        cluster_name = 'Cluster ' + str(int(cluster_id))
+        cluster_dict = {}
+        rated_movies_cluster = rated_movies[rated_movies.cluster_id == cluster_id]
         rating_pred_user = get_top_movies_similarity(rated_movies=rated_movies_cluster[['movie_id', 'rating']],
                                                      nr_movies=20,
                                                      movies_to_drop=already_suggested_movies)
@@ -546,9 +548,12 @@ def suggestions_cluster_data(request):
         movies_cluster.fillna('', inplace=True)
         movies_cluster.to_dict('records')
         movies_cluster = movies_cluster.to_dict('records')
-        cluster_name = 'Cluster ' + str(int(cluster))
-        result_suggested_movies_cluster[cluster_name] = movies_cluster
-    return HttpResponse(json.dumps(result_suggested_movies_cluster), 'application/json')
+        cluster_dict['movies'] = movies_cluster
+        cluster_dict['tags'] = Cluster.objects.get(id=cluster_id).description.split(', ')
+        data_dict[cluster_name] = cluster_dict
+    output_dict = get_json_output(status='normal',
+                                  data=data_dict)
+    return HttpResponse(json.dumps(output_dict), 'application/json')
 
 
 def suggestions_actor_data(request):

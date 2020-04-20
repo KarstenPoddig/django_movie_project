@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 import random
-from movie_app.models import Rating, Movie, ClusteringStatus, Cluster
+from movie_app.models import Rating, Movie, ClusteringStatus, Cluster, GenomeScore
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
+from django.db.models import Sum
 import math
 
 
@@ -47,24 +48,34 @@ def update_movie_clusters(user, movieId, rating_action):
 
 def compute_new_clusters_movies(user):
     clustered_movies = get_clustered_movies(user)
+    # delete old Clusters of user
+    Cluster.objects.filter(user=user).delete()
     # saving the results
     clusters = clustered_movies.cluster.unique()
+    # save clusters in Rating
+    print(clustered_movies.head())
     for cluster in clusters:
-        cluster_entry = Cluster(user=user)
-        cluster_entry.save()
         clustered_movies_cluster = clustered_movies[clustered_movies.cluster == cluster]
+        cluster_description = compute_cluster_description(clustered_movies_cluster.index)
+        cluster_entry = Cluster(user=user,
+                                description=cluster_description)
+        cluster_entry.save()
         for movieId in clustered_movies_cluster.index:
             r = Rating.objects.filter(user=user,
                                       movie__movieId=movieId)[0]
             r.cluster = cluster_entry
             r.save()
-    # for movieId in clustered_movies.index:
-    #     entry = clustered_movies.loc[movieId]
-    #     r = Rating.objects.filter(user=user,
-    #                               movie__movieId=movieId)[0]
-    #     r.cluster = entry.cluster
-    #     r.save()
     return None
+
+
+def compute_cluster_description(movieIds):
+    print(movieIds)
+    tags_and_scores = pd.DataFrame(
+        GenomeScore.objects.filter(movie_id__in=movieIds).values('tag__tag'). \
+            annotate(relevance=Sum('relevance')).order_by('-relevance')[:5]
+    )
+    result = ', '.join(tags_and_scores['tag__tag'])
+    return result
 
 
 def get_clustered_movies(user):
