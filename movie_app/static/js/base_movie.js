@@ -103,9 +103,14 @@ var createResultNavHTML = function(meta_data){
     return(htmlString);
 };
 
+/* this dictionary saves the association of rating buttons
+and the corresponding movie. So that by clicking the rating area
+the movieId for the movie can be sent with the url
+*/
+dict_movie_detailed = {}
 
 var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies, page_number){
-
+    dict_movie_detailed = {}
     $('#movie_loader').show();
     result_elem.innerHTML = '';
     var result_nav_elem_top = document.getElementById('result_nav_area_top');
@@ -175,8 +180,8 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
                         'url': url_rate_movie,
                         'data': {
                             'movieId': movieId,
-                            'rating': data.rating,
-                            'csrfmiddlewaretoken': getCookie("csrftoken")
+                            'rating': data.rating//,
+                            //'csrfmiddlewaretoken': getCookie("csrftoken")
                         },
                         success: function(){
                             if(data.rating == 0 && only_rated_movies==1){
@@ -236,12 +241,12 @@ var getSingleMovie = function(search_elem, result_elem){
                 }).on('rateyo.set', function(e, data){
                     var movieId = this.id.split("_")[1]
                     $.ajax({
-                        'type': 'POST',
+                        'type': 'GET',
                         'url': url_rate_movie,
                         'data': {
                             'movieId': movieId,
-                            'rating': data.rating,
-                            'csrfmiddlewaretoken': getCookie("csrftoken")
+                            'rating': data.rating//,
+                            //'csrfmiddlewaretoken': getCookie("csrftoken")
                         }
                     });
                 });
@@ -344,23 +349,29 @@ var getSimilarMovies = function(movieId){
         data: {
             'movieId': movieId
         },
-        success: function(data){
-            console.log(data);
-            var htmlString = ''
-            htmlString = "<div class='scrollmenu'>";
-            for(var i=0;i<data.length;i++){
-                obj = data[i];
-                elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=1)
-                htmlString += getMovieViewShort(obj, elem_ids, type='similarity');
+        success: function(json_result){
+            console.log(json_result);
+            if(json_result['meta']['status']=='exception'){
+                document.getElementById('similarity_list').innerHTML = json_result['meta']['message']
             }
-            htmlString +=   "</div>";
-            document.getElementById('similarity_list').innerHTML = htmlString;
+            else{
+                var htmlString = ''
+                htmlString = "<div class='scrollmenu'>";
+                data = json_result['data']
+                for(var i=0;i<data.length;i++){
+                    obj = data[i];
+                    elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=1)
+                    htmlString += getMovieViewShort(obj, elem_ids, type='similarity');
+                }
+                htmlString +=   "</div>";
+                document.getElementById('similarity_list').innerHTML = htmlString;
 
-            $('#similar_movie_loader').hide();
+                $('#similar_movie_loader').hide();
 
-            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
-            for(var i=0; i<movie_info_elements.length; i++){
-                movie_info_elements[i].hidden = true;
+                movie_info_elements = document.getElementsByClassName('movie_view_short_info')
+                for(var i=0; i<movie_info_elements.length; i++){
+                    movie_info_elements[i].hidden = true;
+                }
             }
         }
     })

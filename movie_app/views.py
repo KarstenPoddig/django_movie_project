@@ -234,7 +234,6 @@ def get_nr_results_movie_query(term, filter_genre, filter_year,
 
 
 def movies_detail_data(request):
-    # TODO: Re-design output (json-file) with meta data, status, error, etc
     """This function collects the movie information for the tabs
      "All Movies" and "Rated Movies" and returns it as json"""
 
@@ -307,8 +306,6 @@ def get_movie_detail_info(term, filter_genre, filter_year, only_rated_movies,
 
 
 def rate_movie(request):
-    # TODO: Change clustering behaviour
-    # TODO: Re-design output (json-file) with meta data, status, error, etc
     """This function is used to set ratings of movies"""
     # Preprocessing: reading parameters from the request
     movieId = int(request.GET.get('movieId'))
@@ -412,8 +409,11 @@ def suggestions_similar_movies_data(request):
     df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
     # movie is not contained in similarity matrix
     if df_movie_index.empty:
-        print('Movie not contained')
-        return HttpResponse(json.dumps({}), 'application/json')
+        output_dict = get_json_output(status='exception',
+                                      message="The Movie you searched is unfortunately not " +
+                                               "contained in the similarity list (probably " +
+                                               "because there weren't enough ratings)")
+        return HttpResponse(json.dumps(output_dict), 'application/json')
 
     df_similarity['similarity_score'] = movie_similarity_matrix[df_movie_index.row_index.iloc[0]]
     df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:21]
@@ -421,7 +421,9 @@ def suggestions_similar_movies_data(request):
                                  how='inner', on='movieId')
     movies = movies.fillna('')
     movies = movies.to_dict('records')
-    return HttpResponse(json.dumps(movies), 'application/json')
+    output_dict = get_json_output(status='normal',
+                                  data=movies)
+    return HttpResponse(json.dumps(output_dict), 'application/json')
 
 
 def drop_rated_movies(movies, movies_to_drop):
