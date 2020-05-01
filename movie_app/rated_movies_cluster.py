@@ -13,7 +13,7 @@ def get_rated_movies_clustered(user):
                                                 'movie__urlMoviePoster',
                                                 'movie__country',
                                                 'movie__nrRatings',
-                                                'movie__runtime')
+                                                'movie__runtime').order_by('-movie__nrRatings')
     )
     if rated_movies.empty:
         return {}
@@ -35,9 +35,8 @@ def get_rated_movies_clustered(user):
             cluster_name = 'Cluster ' + str(int(cluster_id))
             result = rated_movies[rated_movies.cluster_id == cluster_id]
             tags = Cluster.objects.get(id=cluster_id).description.split(', ')
-        result.sort_values(by='nrRatings', ascending=False, inplace=True)
-        result.drop(axis='columns', labels=['cluster_id'], inplace=True)
-        result.fillna('', inplace=True)
+        result = result.drop(axis='columns', labels=['cluster_id'])
+        result = result.fillna('')
         result = result.to_dict('records')
         cluster_dict = {'movies': result,
                         'tags': tags}

@@ -469,7 +469,7 @@ var getMovieSuggestionsActor = function(){
                     for(var j=0; j<data[actor].length; j++){
                         obj = data[actor][j];
                         // append movie to dict_movie_picture_info
-                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=j)
+                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=i)
                         // append movie to html
                         htmlString += getMovieViewShort(obj, elem_ids, type='else');
                     }
