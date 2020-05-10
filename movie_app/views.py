@@ -1,16 +1,17 @@
-from django.views.generic import TemplateView
-from movie_app.models import Movie, Rating, ClusteringStatus, Cluster
-from django.http import HttpResponse
 import json
-from django.contrib.auth.mixins import LoginRequiredMixin
-import pandas as pd
 import numpy as np
-from django.db.models import Count, Avg
+import pandas as pd
+from django.views.generic import TemplateView
+from django.http import HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connection
+from django.db.models import Count, Avg
+from movie_app.models import Movie, Rating, ClusteringStatus, Cluster
 from movie_app.recommendation_models import load_data
 from movie_app.suggestions_cluster import update_movie_clusters
 from movie_app.suggestions_actor import get_movie_suggestions_actor
 from movie_app.rated_movies_cluster import get_rated_movies_clustered
+
 
 """
 ################### General comments ##############################################
@@ -26,7 +27,7 @@ the frame for the pages are the classes
 
 Philosophy / Architecture:
 
-These classes are just empty cases. The actual contents are loaded through 
+These classes are just empty cases. The actual contents are loaded through
 jquery-requests, which then call the functions
     - movie_search_short
     - movie_search_long
@@ -64,12 +65,13 @@ class AllMovies(TemplateView):
 def movie_search_short(request, only_rated_movies):
     """This function is used for the autocompletion in the movie search fields"""
     if request.is_ajax():
-        q = request.GET.get('term', '')
+        term = request.GET.get('term', '')
         if only_rated_movies:
             df_rating = pd.DataFrame.from_records(Rating.objects.filter(user=request.user).values())
-            movies = Movie.objects.filter(title__icontains=q, movieId__in=df_rating['movie_id'])[:10]
+            movies = Movie.objects.filter(title__icontains=term,
+                                          movieId__in=df_rating['movie_id'])[:10]
         else:
-            movies = Movie.objects.filter(title__icontains=q)[:10]
+            movies = Movie.objects.filter(title__icontains=term)[:10]
         results = []
         for movie in movies:
             movie_json = {'movieId': movie.movieId,
@@ -83,8 +85,8 @@ def movie_search_short(request, only_rated_movies):
     return HttpResponse(data, mimetype)
 
 
-"""
-############## Movie Querys ########################################################
+
+"""############## Movie Querys #####################################################
 
 The tabs "All Movies" and "Rated Movies" contain detailed information of the
 listed movies from several tables in the database (movie, genre, actors, ratings, 
@@ -119,42 +121,39 @@ or movies of a certain genre are searched) get_nr_results_movie_query is used, s
 that the total number of pages of the result can be computed (to navigate through 
 the query results).
 
-#####################################################################################
-"""
+##################################################################################"""
 
 
 def get_year_filter_str(filter_year):
     if filter_year == '':
         return ''
-    else:
-        years_list = list()
-        years = filter_year.split(',')
-        if '1950s and earlier' in years:
-            years_list += list(range(1874, 1960))
-        if '1960s' in years:
-            years_list += list(range(1960, 1970))
-        if '1970s' in years:
-            years_list += list(range(1970, 1980))
-        if '1980s' in years:
-            years_list += list(range(1980, 1990))
-        if '1990s' in years:
-            years_list += list(range(1990, 2000))
-        if '2000s' in years:
-            years_list += list(range(2000, 2010))
-        if '2010s' in years:
-            years_list += list(range(2010, 2020))
-        return ','.join(str(year) for year in years_list)
+    years_list = list()
+    years = filter_year.split(',')
+    if '1950s and earlier' in years:
+        years_list += list(range(1874, 1960))
+    if '1960s' in years:
+        years_list += list(range(1960, 1970))
+    if '1970s' in years:
+        years_list += list(range(1970, 1980))
+    if '1980s' in years:
+        years_list += list(range(1980, 1990))
+    if '1990s' in years:
+        years_list += list(range(1990, 2000))
+    if '2000s' in years:
+        years_list += list(range(2000, 2010))
+    if '2010s' in years:
+        years_list += list(range(2010, 2020))
+    return ','.join(str(year) for year in years_list)
 
 
 def get_genre_filter_str(filter_genre):
     if filter_genre == '':
         return ''
-    else:
-        filter_genre = filter_genre.split(',')
-        genre_list = "'" + filter_genre[0] + "'"
-        for genre in filter_genre[1:]:
-            genre_list = genre_list + ",'" + genre + "'"
-        return genre_list
+    filter_genre = filter_genre.split(',')
+    genre_list = "'" + filter_genre[0] + "'"
+    for genre in filter_genre[1:]:
+        genre_list = genre_list + ",'" + genre + "'"
+    return genre_list
 
 
 def build_movie_query(term, filter_genre, filter_year, only_rated_movies,
@@ -251,7 +250,7 @@ def movies_detail_data(request):
                                      filter_year=filter_year,
                                      only_rated_movies=only_rated_movies,
                                      user_id=request.user.id)
-    nr_pages_total = int(np.ceil(nr_results_total/nr_results_shown))
+    nr_pages_total = int(np.ceil(nr_results_total / nr_results_shown))
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
     if nr_results_total == 0:
@@ -355,8 +354,8 @@ class Analysis(TemplateView):
     template_name = 'movie_app/analysis.html'
 
 
-"""
-################# Movie Suggestions ##############################################
+
+"""################# Movie Suggestions ##############################################
 
 The class SuggestionView is the frame for the tab "Movie Suggestions".
 
@@ -384,8 +383,7 @@ If the user enters a Movie in the search field a javascript routine calls the
 function "similar_movies". This function loads the similarity matrix and finds 
 the most similar movies. The result is returned in json format.
 
-##################################################################################
-"""
+###############################################################################"""
 
 
 class SuggestionsClusterView(LoginRequiredMixin, TemplateView):
@@ -411,8 +409,8 @@ def suggestions_similar_movies_data(request):
     if df_movie_index.empty:
         output_dict = get_json_output(status='exception',
                                       message="The Movie you searched is unfortunately not " +
-                                               "contained in the similarity list (probably " +
-                                               "because there weren't enough ratings)")
+                                              "contained in the similarity list (probably " +
+                                              "because there weren't enough ratings)")
         return HttpResponse(json.dumps(output_dict), 'application/json')
 
     df_similarity['similarity_score'] = movie_similarity_matrix[df_movie_index.row_index.iloc[0]]
@@ -432,9 +430,9 @@ def drop_rated_movies(movies, movies_to_drop):
 
 
 def get_top_movielen_movies(user, nr_movies):
-    qs = Rating.objects.values('movie_id').annotate(Count('rating'), Avg('rating')) \
+    query_result = Rating.objects.values('movie_id').annotate(Count('rating'), Avg('rating')) \
         .filter(rating__count__gte=50).order_by('-rating__avg')
-    movies = pd.DataFrame.from_records(qs).drop('rating__count', axis=1)
+    movies = pd.DataFrame.from_records(query_result).drop('rating__count', axis=1)
     movies.columns = ['movieId', 'rating_pred']
     movies = drop_rated_movies(movies, user)
     movies = movies[:nr_movies]
@@ -524,11 +522,9 @@ def suggestions_cluster_data(request):
         return HttpResponse(json.dumps(output_dict),
                             'application/json')
     # get unique clusters (besides of not clustered movies)
-    mean_ratings_clusters = rated_movies[~rated_movies.cluster_id.isna()].groupby('cluster_id')[['rating']].mean(). \
-        sort_values(by='rating', ascending=False)
+    mean_ratings_clusters = rated_movies[~rated_movies.cluster_id.isna()]. \
+        groupby('cluster_id')[['rating']].mean().sort_values(by='rating', ascending=False)
     cluster_ids = mean_ratings_clusters.index
-    # clusters = rated_movies[~rated_movies.cluster.isna()].cluster.unique()
-    result_suggested_movies_cluster = {}
     # this variable stores the movies which are already suggested
     # by suggestions from other clusters. This means two movies won't
     # be suggested by ratings from several clusters
@@ -538,7 +534,8 @@ def suggestions_cluster_data(request):
         cluster_name = 'Cluster ' + str(int(cluster_id))
         cluster_dict = {}
         rated_movies_cluster = rated_movies[rated_movies.cluster_id == cluster_id]
-        rating_pred_user = get_top_movies_similarity(rated_movies=rated_movies_cluster[['movie_id', 'rating']],
+        rating_pred_user = get_top_movies_similarity(rated_movies=rated_movies_cluster[['movie_id',
+                                                                                        'rating']],
                                                      nr_movies=20,
                                                      movies_to_drop=already_suggested_movies)
         movies_cluster = get_movies(rating_pred_user.movieId)
@@ -617,7 +614,11 @@ def quality_of_profile(request):
                         'application/json')
 
 
-def get_json_output(status, message='', additional_meta_dict={}, data=[]):
+def get_json_output(status, message='', additional_meta_dict=None, data=None):
+    if data is None:
+        data = []
+    if additional_meta_dict is None:
+        additional_meta_dict = {}
     output_dict = {'meta': {'status': status,
                             'message': message},
                    'data': data}

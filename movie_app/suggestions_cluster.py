@@ -1,10 +1,9 @@
+import random
 import pandas as pd
 import numpy as np
-import random
+from django.db.models import Sum
 from movie_app.models import Rating, Movie, ClusteringStatus, Cluster, GenomeScore
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
-from django.db.models import Sum
-import math
 
 
 def join_movies_to_row_index(movies):
@@ -43,7 +42,6 @@ def update_movie_clusters(user, movieId, rating_action):
     else:
         if rating_action == 'created':
             assign_movie_to_cluster(user, movieId)
-    return None
 
 
 def compute_new_clusters_movies(user):
@@ -61,11 +59,10 @@ def compute_new_clusters_movies(user):
                                 description=cluster_description)
         cluster_entry.save()
         for movieId in clustered_movies_cluster.index:
-            r = Rating.objects.filter(user=user,
-                                      movie__movieId=movieId)[0]
-            r.cluster = cluster_entry
-            r.save()
-    return None
+            rating = Rating.objects.filter(user=user,
+                                           movie__movieId=movieId)[0]
+            rating.cluster = cluster_entry
+            rating.save()
 
 
 def compute_cluster_description(movieIds):
@@ -105,7 +102,7 @@ def assign_movie_to_cluster(user, movieId):
     # store cluster for movie
     movie = Movie.objects.get(movieId=movieId)
     rating_entry = Rating.objects.filter(user=user,
-                                        movie=movie)[0]
+                                         movie=movie)[0]
     rating_entry.cluster = cluster
     rating_entry.save()
     print('Movie ' + movie.title + ' assigned to cluster ' + str(cluster) + '.')
@@ -138,6 +135,8 @@ def get_rank_score(movies, distance_matrix):
 
 
 def initiate_clusters(movies, distance_matrix):
+    """This function computes a first clustering of the movies with the
+    distance matrix."""
     nr_movies_per_cluster = get_nr_movies_per_cluster(nr_all_movies=movies.shape[0])
     movies['cluster'] = 0
     cluster = 0
@@ -161,7 +160,8 @@ def get_best_movies_outside_cluster(movies, cluster, random_size, distance_matri
     return top_movie
 
 
-def get_best_movie_of_cluster_1_for_cluster_2(movies, cluster_1, cluster_2, random_size, distance_matrix):
+def get_best_movie_of_cluster_1_for_cluster_2(movies, cluster_1, cluster_2,
+                                              random_size, distance_matrix):
     movies_cluster_1 = movies[movies.cluster == cluster_1]
     nr_movies_cluster_1 = movies_cluster_1.shape[0]
     movies_cluster_2 = movies[movies.cluster == cluster_2]
