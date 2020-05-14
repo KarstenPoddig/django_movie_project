@@ -218,6 +218,8 @@ var getSingleMovie = function(search_elem, result_elem){
             'filter_year': '',
         },
          success: function(json_result){
+            // disable loading symbol
+            $('#movie_loader').hide();
 
             console.log(json_result)
 
