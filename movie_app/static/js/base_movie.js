@@ -203,6 +203,9 @@ var getMovies = function(search_elem, result_elem, only_rated_movies, nr_movies,
 
 
 var getSingleMovie = function(search_elem, result_elem){
+    // show loading symbol
+    result_elem.innerHTML='';
+    document.getElementById('similar_movie_loader').hidden = false;
 
     $.ajax({
         type: 'GET',
@@ -219,7 +222,7 @@ var getSingleMovie = function(search_elem, result_elem){
         },
          success: function(json_result){
             // disable loading symbol
-            $('#movie_loader').hide();
+            document.getElementById('similar_movie_loader').hidden = true;
 
             console.log(json_result)
 

@@ -1,6 +1,3 @@
-
-
-
 function getCookie(c_name){
     if (document.cookie.length > 0){
         c_start = document.cookie.indexOf(c_name + "=");
@@ -17,12 +14,12 @@ function getCookie(c_name){
 
 
 // Sidenav-menu-button
-function openNav() {
+function openNav(){
   document.getElementById("mySidenav").style.width = "200px";
   document.getElementById("content").style.marginLeft = "200px";
 }
 
-function closeNav() {
+function closeNav(){
   document.getElementById("mySidenav").style.width = "0";
   document.getElementById("content").style.marginLeft= "0";
 }

@@ -62,6 +62,30 @@ class AllMovies(TemplateView):
     template_name = 'movie_app/all_movies.html'
 
 
+class OutputObject:
+    """This is the central class """
+    def __init__(self, status=None, message=None, data=None,
+                 dict_additional_meta_data={}):
+        self.status = status
+        self.message = message
+        self.data = data
+        self.additional_meta_data = dict_additional_meta_data
+
+    def build_meta_data(self, standard_dict):
+        self.additional_meta_data.update(standard_dict)
+
+    def build_output_dict(self):
+        self.build_meta_data(standard_dict={'status': self.status,
+                                            'message': self.message})
+        self.output_dict = {'meta': self.additional_meta_data,
+                            'data': self.data}
+
+    def get_http_response(self):
+        self.build_output_dict()
+        return HttpResponse(json.dumps(self.output_dict),
+                            'application/json')
+
+
 def movie_search_short(request, only_rated_movies):
     """This function is used for the autocompletion in the movie search fields"""
     if request.is_ajax():
@@ -254,8 +278,8 @@ def movies_detail_data(request):
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
     if nr_results_total == 0:
-        output_dict = get_json_output(status='exception',
-                                      message='No results found.')
+        output = OutputObject(status='exception',
+                              message='No results found.')
     else:
         data = get_movie_detail_info(term=term, filter_genre=filter_genre,
                                      filter_year=filter_year,
@@ -263,13 +287,13 @@ def movies_detail_data(request):
                                      page_number=page_number,
                                      nr_results_shown=nr_results_shown,
                                      user_id=request.user.id)
-        additional_meta_dict = {'nr_results_total': nr_results_total,
-                                'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
-                                'page_number': page_number,
-                                'nr_results_shown': nr_results_shown}
-        output_dict = get_json_output(status='normal', data=data,
-                                      additional_meta_dict=additional_meta_dict)
-    return HttpResponse(json.dumps(output_dict), 'application/json')
+        dict_additional_meta_data = {'nr_results_total': nr_results_total,
+                                     'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
+                                     'page_number': page_number,
+                                     'nr_results_shown': nr_results_shown}
+        output = OutputObject(status='normal', data=data,
+                              dict_additional_meta_data=dict_additional_meta_data)
+    return output.get_http_response()
 
 
 def get_nr_movies(term, filter_genre, filter_year, only_rated_movies, user_id):
@@ -407,11 +431,11 @@ def suggestions_similar_movies_data(request):
     df_movie_index = df_movie_index[df_movie_index.movieId == movieId]
     # movie is not contained in similarity matrix
     if df_movie_index.empty:
-        output_dict = get_json_output(status='exception',
-                                      message="The Movie you searched is unfortunately not " +
-                                              "contained in the similarity list (probably " +
-                                              "because there weren't enough ratings)")
-        return HttpResponse(json.dumps(output_dict), 'application/json')
+        output = OutputObject(status='exception',
+                              message="The Movie you searched is unfortunately not " +
+                                      "contained in the similarity list (probably " +
+                                      "because there weren't enough ratings)")
+        return output.get_http_response()
 
     df_similarity['similarity_score'] = movie_similarity_matrix[df_movie_index.row_index.iloc[0]]
     df_similarity = df_similarity.sort_values(by='similarity_score', ascending=False)[1:21]
@@ -419,9 +443,9 @@ def suggestions_similar_movies_data(request):
                                  how='inner', on='movieId')
     movies = movies.fillna('')
     movies = movies.to_dict('records')
-    output_dict = get_json_output(status='normal',
-                                  data=movies)
-    return HttpResponse(json.dumps(output_dict), 'application/json')
+    output = OutputObject(status='normal',
+                          data=movies)
+    return output.get_http_response()
 
 
 def drop_rated_movies(movies, movies_to_drop):
@@ -506,21 +530,19 @@ def suggestions_cluster_data(request):
     # return then a corresponding message
     clustering_status = ClusteringStatus.objects.filter(user=user)[0].status
     if clustering_status == 'Pending':
-        output_dict = get_json_output(status='exception',
-                                      message='Your movies are clustered right now (because you added ' +
-                                              'or deleted one or more of your ratings. Please wait a ' +
-                                              'minute or two and try again.')
-        return HttpResponse(json.dumps(output_dict),
-                            'application/json')
+        output = OutputObject(status='exception',
+                              message='Your movies are clustered right now (because you added ' +
+                                      'or deleted one or more of your ratings. Please wait a ' +
+                                      'minute or two and try again.')
+        return output.get_http_response()
 
     rated_movies = pd.DataFrame.from_records(
         Rating.objects.filter(user=user).values('movie_id', 'rating', 'cluster_id')
     )
     if rated_movies.empty:
-        output_dict = get_json_output(status='exception',
-                                      message="You didn't rate any movies yet.")
-        return HttpResponse(json.dumps(output_dict),
-                            'application/json')
+        output = OutputObject(status='exception',
+                              message="You didn't rate any movies yet.")
+        return output.get_http_response()
     # get unique clusters (besides of not clustered movies)
     mean_ratings_clusters = rated_movies[~rated_movies.cluster_id.isna()]. \
         groupby('cluster_id')[['rating']].mean().sort_values(by='rating', ascending=False)
@@ -550,22 +572,21 @@ def suggestions_cluster_data(request):
         cluster_dict['movies'] = movies_cluster
         cluster_dict['tags'] = Cluster.objects.get(id=cluster_id).description.split(', ')
         data_dict[cluster_name] = cluster_dict
-    output_dict = get_json_output(status='normal',
-                                  data=data_dict)
-    return HttpResponse(json.dumps(output_dict), 'application/json')
+    output = OutputObject(status='normal',
+                          data=data_dict)
+    return output.get_http_response()
 
 
 def suggestions_actor_data(request):
     user = request.user
     data = get_movie_suggestions_actor(user=user)
     if len(data.keys()) == 0:
-        output_dict = get_json_output(status='exception',
-                                      message="You didn't rate any movies.")
+        output = OutputObject(status='exception',
+                              message="You didn't rate any movies.")
     else:
-        output_dict = get_json_output(status='normal',
-                                      data=data)
-    return HttpResponse(json.dumps(output_dict),
-                        'application/json')
+        output = OutputObject(status='normal',
+                              data=data)
+    return output.get_http_response()
 
 
 class RatedMoviesClusterView(LoginRequiredMixin, TemplateView):
@@ -576,13 +597,12 @@ def rated_movies_cluster_data(request):
     user = request.user
     data = get_rated_movies_clustered(user=user)
     if len(data.keys()) == 0:
-        output_dict = get_json_output(status='exception',
-                                      message="You didn't rate any movies.")
+        output = OutputObject(status='execption',
+                              message="You didn't rate any movies.")
     else:
-        output_dict = get_json_output(status='normal',
-                                      data=data)
-    return HttpResponse(json.dumps(output_dict),
-                        'application/json')
+        output = OutputObject(status='normal',
+                              data=data)
+    return output.get_http_response()
 
 
 def quality_of_profile(request):
@@ -606,24 +626,17 @@ def quality_of_profile(request):
         note = 'You have a great basis for the movie suggestions. ' + \
                'Anyway the more movies you rate, the better the algorithms work.'
 
-    output_dict = get_json_output(status='normal',
-                                  data={'nr_rated_movies': nr_rated_movies,
-                                        'status': status,
-                                        'note': note})
-    return HttpResponse(json.dumps(output_dict),
-                        'application/json')
+    output = OutputObject(status='normal',
+                          data={'nr_rated_movies': nr_rated_movies,
+                              'status': status,
+                              'note': note})
+    return output.get_http_response()
 
 
-def get_json_output(status, message='', additional_meta_dict=None, data=None):
-    if data is None:
-        data = []
-    if additional_meta_dict is None:
-        additional_meta_dict = {}
-    output_dict = {'meta': {'status': status,
-                            'message': message},
-                   'data': data}
-    # check if additional meta data
-    if len(additional_meta_dict.keys()) > 0:
-        for key in additional_meta_dict.keys():
-            output_dict['meta'][key] = additional_meta_dict[key]
-    return output_dict
+
+
+"""#################################################################################
+This section provides the data analysis results for the statistic page (only for
+staff user)
+
+#################################################################################"""
