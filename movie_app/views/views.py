@@ -10,6 +10,7 @@ from movie_app.suggestions_cluster import update_movie_clusters
 from movie_app.suggestions_actor import get_movie_suggestions_actor
 from movie_app.rated_movies_cluster import get_rated_movies_clustered
 from movie_app.views.views_output_object import OutputObject
+from movie_app.sql_query.sql_query import QueryMovieDetails
 
 """
 ################### General comments ##############################################
@@ -107,114 +108,6 @@ the query results).
 ##################################################################################"""
 
 
-def get_year_filter_str(filter_year):
-    if filter_year == '':
-        return ''
-    years_list = list()
-    years = filter_year.split(',')
-    if '1950s and earlier' in years:
-        years_list += list(range(1874, 1960))
-    if '1960s' in years:
-        years_list += list(range(1960, 1970))
-    if '1970s' in years:
-        years_list += list(range(1970, 1980))
-    if '1980s' in years:
-        years_list += list(range(1980, 1990))
-    if '1990s' in years:
-        years_list += list(range(1990, 2000))
-    if '2000s' in years:
-        years_list += list(range(2000, 2010))
-    if '2010s' in years:
-        years_list += list(range(2010, 2020))
-    return ','.join(str(year) for year in years_list)
-
-
-def get_genre_filter_str(filter_genre):
-    if filter_genre == '':
-        return ''
-    filter_genre = filter_genre.split(',')
-    genre_list = "'" + filter_genre[0] + "'"
-    for genre in filter_genre[1:]:
-        genre_list = genre_list + ",'" + genre + "'"
-    return genre_list
-
-
-def build_movie_query(term, filter_genre, filter_year, only_rated_movies,
-                      page_number, nr_results_shown, user_id):
-    query = open('movie_app/sql_query/template_query_all_movies.sql',
-                 'r', encoding='utf-8-sig').read()
-    # replacing term
-    query = query.replace('TERM', term.lower())
-
-    # replacing genres
-    if filter_genre != '':
-        genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
-                                'r', encoding='utf-8-sig').read()
-        query = query.replace('-- GENRE_FILTER', genre_filter_str)
-        genre_list = get_genre_filter_str(filter_genre)
-        query = query.replace('GENRE_LIST', genre_list)
-
-    # adjust query, if just to show rated movies
-    if only_rated_movies == 1:
-        rating_filter_str = open('movie_app/sql_query/rated_filter.txt',
-                                 'r', encoding='utf-8-sig').read()
-        query = query.replace('-- RATED_FILTER', rating_filter_str)
-        query = query.replace('-- RATING_TABLE', ',public.movie_app_rating r')
-        query = query.replace('-- USER_ID', str(user_id))
-    else:
-        if user_id is None:
-            query = query.replace('-- USER_ID', '-1')
-        else:
-            query = query.replace('-- USER_ID', str(user_id))
-
-    # filter year
-    if filter_year != '':
-        filter_year_str = open('movie_app/sql_query/year_filter.txt',
-                               'r', encoding='utf-8-sig').read()
-        query = query.replace('-- YEAR_FILTER', filter_year_str)
-        year_list = get_year_filter_str(filter_year)
-        query = query.replace('YEAR_LIST', year_list)
-
-    # adjust offset and limit (to make the navigation possible)
-    query = query.replace('-- LIMIT', str(nr_results_shown))
-    query = query.replace('-- OFFSET', str((page_number - 1) * nr_results_shown))
-    return query
-
-
-def get_nr_results_movie_query(term, filter_genre, filter_year,
-                               only_rated_movies, user_id):
-    query = open('movie_app/sql_query/template_query_all_movies_nr_results.sql',
-                 'r', encoding='utf-8-sig').read()
-    # replacing term
-    query = query.replace('TERM', term.lower())
-
-    # replacing genres
-    if filter_genre != '':
-        genre_filter_str = open('movie_app/sql_query/genre_filter.txt',
-                                'r', encoding='utf-8-sig').read()
-        query = query.replace('-- GENRE_FILTER', genre_filter_str)
-        genre_list = get_genre_filter_str(filter_genre)
-        query = query.replace('GENRE_LIST', genre_list)
-
-    # adjust query, if just to show rated movies
-    if only_rated_movies == 1:
-        rating_filter_str = open('movie_app/sql_query/rated_filter.txt',
-                                 'r', encoding='utf-8-sig').read()
-        query = query.replace('-- RATED_FILTER', rating_filter_str)
-        query = query.replace('-- RATING_TABLE', ',public.movie_app_rating r')
-        query = query.replace('-- USER_ID', str(user_id))
-
-    # filter year
-    if filter_year != '':
-        filter_year_str = open('movie_app/sql_query/year_filter.txt',
-                               'r', encoding='utf-8-sig').read()
-        query = query.replace('-- YEAR_FILTER', filter_year_str)
-        year_list = get_year_filter_str(filter_year)
-        query = query.replace('YEAR_LIST', year_list)
-
-    return query
-
-
 def movies_detail_data(request):
     """This function collects the movie information for the tabs
      "All Movies" and "Rated Movies" and returns it as json"""
@@ -229,10 +122,15 @@ def movies_detail_data(request):
     page_number = int(request.GET.get('page_number', 1))
     # user_id = int(request.user.id)
 
-    nr_results_total = get_nr_movies(term=term, filter_genre=filter_genre,
-                                     filter_year=filter_year,
-                                     only_rated_movies=only_rated_movies,
-                                     user_id=request.user.id)
+    query_movie_details = QueryMovieDetails(term=term,
+                                            filter_genre=filter_genre,
+                                            filter_year=filter_year,
+                                            only_rated_movies=only_rated_movies,
+                                            page_number=page_number,
+                                            nr_results_shown=nr_results_shown,
+                                            user_id=request.user.id)
+    nr_results_total = query_movie_details.get_nr_results()
+
     nr_pages_total = int(np.ceil(nr_results_total / nr_results_shown))
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
@@ -240,12 +138,7 @@ def movies_detail_data(request):
         output = OutputObject(status='exception',
                               message='No results found.')
     else:
-        data = get_movie_detail_info(term=term, filter_genre=filter_genre,
-                                     filter_year=filter_year,
-                                     only_rated_movies=only_rated_movies,
-                                     page_number=page_number,
-                                     nr_results_shown=nr_results_shown,
-                                     user_id=request.user.id)
+        data = query_movie_details.get_movies_with_details()
         dict_additional_meta_data = {'nr_results_total': nr_results_total,
                                      'total_number_pages': np.ceil(nr_results_total / nr_results_shown),
                                      'page_number': page_number,
@@ -253,38 +146,6 @@ def movies_detail_data(request):
         output = OutputObject(status='normal', data=data,
                               dict_additional_meta_data=dict_additional_meta_data)
     return output.get_http_response()
-
-
-def get_nr_movies(term, filter_genre, filter_year, only_rated_movies, user_id):
-    cursor = connection.cursor()
-    # compute the total number of results
-    cursor.execute(get_nr_results_movie_query(term=term,
-                                              filter_genre=filter_genre,
-                                              filter_year=filter_year,
-                                              only_rated_movies=only_rated_movies,
-                                              user_id=user_id))
-    nr_results = int(cursor.fetchone()[0])
-    return nr_results
-
-
-def get_movie_detail_info(term, filter_genre, filter_year, only_rated_movies,
-                          page_number, nr_results_shown, user_id):
-    cursor = connection.cursor()
-    cursor.execute(build_movie_query(term=term,
-                                     filter_genre=filter_genre,
-                                     filter_year=filter_year,
-                                     only_rated_movies=only_rated_movies,
-                                     page_number=page_number,
-                                     nr_results_shown=nr_results_shown,
-                                     user_id=user_id))
-    movies = cursor.fetchall()
-    movies = pd.DataFrame(movies)
-    if not movies.empty:
-        movies.columns = ['movieId', 'title', 'year', 'production', 'country', 'urlMoviePoster',
-                          'imdbRating', 'actor', 'director', 'writer', 'rating', 'genre']
-    movies.replace(np.nan, '', inplace=True)
-    movies = movies.to_dict('records')
-    return movies
 
 
 def rate_movie(request):

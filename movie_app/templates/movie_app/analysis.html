@@ -2,8 +2,27 @@
 
 {% block content_outer %}
 
+{% load static %}
+<script src="{% static 'js/analysis.js' %}"></script>
+
 <p>This is the Analysis page (for admins)</p>
 
 <h3>Movie Rating Histogram</h3>
 
+    <button id="histogram_button" class="button" type="submit" style="width: 20%">Show Histogram!</button>
+
+    <div id="histogram_result_area"></div>
+
+    <script type="text/javascript">
+        // define url for analysis
+        var url_analysis_histogram_data = '{% url 'analysis-histogram-data' %}';
+
+        // query histogram data on click
+        var histogram_button = document.getElementById('histogram_button');
+        histogram_button.onclick = function(){
+            getHistogram();
+        };
+    </script>
+
+<h3>Another Analysis ...</h3>
 {% endblock %}
