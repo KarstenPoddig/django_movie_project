@@ -1,9 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import connection
 from django.db.models import Count, Avg
 from movie_app.models import Movie, Rating, ClusteringStatus, Cluster
@@ -11,7 +9,7 @@ from movie_app.recommendation_models import load_data
 from movie_app.suggestions_cluster import update_movie_clusters
 from movie_app.suggestions_actor import get_movie_suggestions_actor
 from movie_app.rated_movies_cluster import get_rated_movies_clustered
-
+from movie_app.views.views_output_object import OutputObject
 
 """
 ################### General comments ##############################################
@@ -45,45 +43,6 @@ dynamic.
 
 ###################################################################################
 """
-
-
-# Create your views here.
-
-class HomeView(TemplateView):
-    """View function for home page of site"""
-    template_name = 'movie_app/home.html'
-
-
-class RatedMovies(LoginRequiredMixin, TemplateView):
-    template_name = 'movie_app/rated_movies.html'
-
-
-class AllMovies(TemplateView):
-    template_name = 'movie_app/all_movies.html'
-
-
-class OutputObject:
-    """This is the central class """
-    def __init__(self, status=None, message=None, data=None,
-                 dict_additional_meta_data={}):
-        self.status = status
-        self.message = message
-        self.data = data
-        self.additional_meta_data = dict_additional_meta_data
-
-    def build_meta_data(self, standard_dict):
-        self.additional_meta_data.update(standard_dict)
-
-    def build_output_dict(self):
-        self.build_meta_data(standard_dict={'status': self.status,
-                                            'message': self.message})
-        self.output_dict = {'meta': self.additional_meta_data,
-                            'data': self.data}
-
-    def get_http_response(self):
-        self.build_output_dict()
-        return HttpResponse(json.dumps(self.output_dict),
-                            'application/json')
 
 
 def movie_search_short(request, only_rated_movies):
@@ -372,13 +331,6 @@ def rate_movie(request):
     return HttpResponse('Done')
 
 
-class Analysis(TemplateView):
-    """This view is the template class for the Analys site. This site
-    contains statistical summaries."""
-    template_name = 'movie_app/analysis.html'
-
-
-
 """################# Movie Suggestions ##############################################
 
 The class SuggestionView is the frame for the tab "Movie Suggestions".
@@ -408,18 +360,6 @@ function "similar_movies". This function loads the similarity matrix and finds
 the most similar movies. The result is returned in json format.
 
 ###############################################################################"""
-
-
-class SuggestionsClusterView(LoginRequiredMixin, TemplateView):
-    template_name = 'movie_app/suggestions_cluster.html'
-
-
-class SuggestionsSimilarMoviesView(TemplateView):
-    template_name = 'movie_app/suggestions_similar_movies.html'
-
-
-class SuggestionsActorView(LoginRequiredMixin, TemplateView):
-    template_name = 'movie_app/suggestions_actor.html'
 
 
 def suggestions_similar_movies_data(request):
@@ -589,10 +529,6 @@ def suggestions_actor_data(request):
     return output.get_http_response()
 
 
-class RatedMoviesClusterView(LoginRequiredMixin, TemplateView):
-    template_name = 'movie_app/rated_movies_cluster.html'
-
-
 def rated_movies_cluster_data(request):
     user = request.user
     data = get_rated_movies_clustered(user=user)
@@ -635,8 +571,3 @@ def quality_of_profile(request):
 
 
 
-"""#################################################################################
-This section provides the data analysis results for the statistic page (only for
-staff user)
-
-#################################################################################"""
