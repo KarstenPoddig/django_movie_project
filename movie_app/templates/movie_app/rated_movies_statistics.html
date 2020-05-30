@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content_outer %}
+
+    {% if request.user.is_authenticated %}
+
+    <h3>Statistics of your ratings</h3>
+
+    <div id="statistics_area" style="padding-top: 20px;">
+
+        <div class="row">
+
+            <div class="col-sm-6">
+                <h4>Ratings</h4>
+
+                <div class="container_hist_ratings">
+                    <canvas id="hist_ratings" height="100"></canvas>
+                </div>
+
+            </div>
+
+            <div class="col-sm-6">
+                <h4>Number of Ratings per Genre</h4>
+
+                <div class="container_hist_genre">
+                    <canvas id="hist_genre" height="100"></canvas>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-sm-6">
+                <h4>Average Rating per Genre</h4>
+                <div class="container_bar_avg_rating_per_genre">
+                    <canvas id="bar_avg_rating_per_genre" height="100"></canvas>
+                </div>
+            </div>
+
+            <div class="col-sm-6">
+                <h4>Ratings per Year</h4>
+                <div class="container_hist_ratings_year">
+                    <canvas id="hist_rating_year" height="100"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    {% load static %}
+    <script src="{% static 'js/Chart.min.js' %}"></script>
+    <script src="{% static 'js/rated_movies_statistics.js' %}"></script>
+    <script type="text/javascript">
+
+        var url_rated_movies_statistics_hist_ratings_data = '{% url 'rated-movies-statistics-hist-ratings-data' %}';
+        getHistRatings();
+
+        var url_rated_movies_statistics_hist_genre_data = '{% url 'rated-movies-statistics-hist-genre-data' %}';
+        getHistGenre();
+
+        var url_rated_movies_statistics_avg_ratings_genre_data =
+            '{% url 'rated-movies-statistics-avg-rating-genre-data' %}';
+        getAvgRatingGenre();
+    </script>
+
+    {% endif %}
+
+{% endblock %}

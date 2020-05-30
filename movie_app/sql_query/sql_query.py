@@ -7,14 +7,30 @@ from django.db import connection
 class RawSQLQuery:
     def __init__(self):
         self.cursor = connection.cursor()
+        self.query = None
 
-    # execute query
-    def execute(self, query):
+    def read_sql(self, file):
+        self.query = open(file, 'r',
+                          encoding='utf-8-sig').read()
+
+    def get_col_names_from_cursor(self):
+        col_names = []
+        for entry in self.cursor.description:
+            col_names.append(entry.name)
+        return col_names
+
+    def get_data_basic(self, query, type='dict',
+                       orient='records', replace_na=''):
         self.cursor.execute(query)
-
-    # fetch results
-    def fetchall(self):
-        return self.cursor.fetchall()
+        results = pd.DataFrame(self.cursor.fetchall())
+        results.replace(np.nan, replace_na, inplace=True)
+        results.columns = self.get_col_names_from_cursor()
+        # return results as DataFrame
+        if type == 'DataFrame':
+            return results
+        # transform data to dictionary with respective orientation
+        # and return
+        return results.to_dict(orient=orient)
 
 
 """################################################################
@@ -167,29 +183,21 @@ class QueryMovieDetails(RawSQLQuery):
 
     def get_nr_results(self):
         self.build_query_nr_results()
-        self.execute(query=self.query_nr_results)
-        nr_results = self.fetchall()[0][0]
-        return nr_results
+        nr_results = self.get_data_basic(query=self.query_nr_results,
+                                         orient='records')
+        return nr_results[0]['count']
 
     def get_movies_with_details(self):
         self.build_query_movie_details()
-        self.execute(query=self.query_movie_details)
-        query_result = self.fetchall()
-        query_result = pd.DataFrame(query_result)
-        if not query_result.empty:
-            query_result.columns = ['movieId', 'title', 'year', 'production', 'country', 'urlMoviePoster',
-                                    'imdbRating', 'actor', 'director', 'writer', 'rating', 'genre']
-        query_result.replace(np.nan, '', inplace=True)
-        query_result = query_result.to_dict('records')
+        query_result = self.get_data_basic(query=self.query_movie_details,
+                                           orient='records',
+                                           replace_na='')
         return query_result
 
 
 """#####################################################################
 
                    Analysis
-
-
-
 
 #####################################################################"""
 
@@ -202,5 +210,48 @@ class AnalysisNrRatingsHistogram(RawSQLQuery):
                           'r', encoding='utf-8-sig').read()
 
     def get_data(self):
-        self.execute(query=self.query)
-        return self.fetchall()
+        results = self.get_data_basic(query=self.query,
+                                      orient='list')
+        return results
+
+
+"""#####################################################################
+
+                   Statistics for Rated Movies
+
+#####################################################################"""
+
+
+class RatedMoviesHistGenre(RawSQLQuery):
+
+    def __init__(self):
+        super().__init__()
+        self.read_sql(
+            file='movie_app/sql_query/rated_movies_hist_genre.sql'
+        )
+
+    def build_query(self, user_id):
+        self.query = self.query.replace('-- USER_ID',
+                                        str(user_id))
+
+    def get_data(self):
+        return self.get_data_basic(query=self.query,
+                                   orient='list')
+
+
+class RatedMoviesAvgGenre(RawSQLQuery):
+
+    def __init__(self):
+        super().__init__()
+        self.read_sql(
+            file='movie_app/sql_query/rated_movies_avg_rating_genre.sql'
+        )
+
+    def build_query(self, user_id):
+        self.query = self.query.replace('-- USER_ID',
+                                        str(user_id))
+
+    def get_data(self):
+        return self.get_data_basic(query=self.query,
+                                   type='dict',
+                                   orient='list')

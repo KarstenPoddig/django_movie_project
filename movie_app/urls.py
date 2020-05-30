@@ -1,5 +1,6 @@
 from django.urls import path, include
-from movie_app.views import views_page_templates, views, views_analysis
+from movie_app.views import views_page_templates, views,\
+    views_analysis, views_rated_movies_statistics
 
 urlpatterns = [
     path('', views_page_templates.HomeView.as_view(), name='home'),
@@ -17,13 +18,31 @@ urlpatterns = [
     # Detail View
     path('rated_movies/', views_page_templates.RatedMovies.as_view(), name='rated-movies-overview'),
 
-    # Short View
+    # Rated Movies - View with clusters
     # path of template page
     path('rated_movies_cluster/', views_page_templates.RatedMoviesClusterView.as_view(),
          name='rated-movies-cluster'),
     # path of data (json)
     path('rated_movies_cluster_data/', views.rated_movies_cluster_data,
          name='rated-movies-cluster-data'),
+    # Template page for statistics page (dashboard)
+    path('rated_movies_statistics/', views_page_templates.RatedMoviesStatistics.as_view(),
+         name='rated-movies-statistics'),
+    # data for histogram of ratings
+
+    # data for rating histogram
+    path('rated_movies_statistics_hist_ratings_data/',
+         views_rated_movies_statistics.hist_ratings_data,
+         name='rated-movies-statistics-hist-ratings-data'),
+    # data for histogram of ratings per genre
+    path('rated_movies_statistics_hist_ratings_per_genre_data/',
+         views_rated_movies_statistics.hist_ratings_per_genre_data,
+         name='rated-movies-statistics-hist-genre-data'),
+    # data for average rating per genre
+    path('rated_movies_statistics_avg_rating_genre_data/',
+         views_rated_movies_statistics.avg_rating_per_genre_data,
+         name='rated-movies-statistics-avg-rating-genre-data'),
+
 
     path('rate_movie/', views.rate_movie, name='rate-movie'),
     path('analysis/', views_page_templates.Analysis.as_view(), name='analysis'),

@@ -11,6 +11,10 @@ class RatedMovies(LoginRequiredMixin, TemplateView):
     template_name = 'movie_app/rated_movies.html'
 
 
+class RatedMoviesStatistics(LoginRequiredMixin, TemplateView):
+    template_name = 'movie_app/rated_movies_statistics.html'
+
+
 class AllMovies(TemplateView):
     template_name = 'movie_app/all_movies.html'
 

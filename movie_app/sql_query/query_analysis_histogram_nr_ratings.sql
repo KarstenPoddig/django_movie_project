@@ -1,5 +1,5 @@
   select nr_ratings
-         ,count(*) nr_user
+         ,count(*) frequency
     from (select r.user_id
                  ,count(*) nr_ratings
             from public.movie_app_rating r

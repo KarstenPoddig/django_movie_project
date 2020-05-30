@@ -281,10 +281,10 @@ var getMovieViewDetailed = function(obj){
                                 obj.country + ", " +
                                 obj.production +
                          "</p>" +
-                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Actors: </b>" + obj.actor + "</p>" +
-                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Director: </b>" + obj.director + "</p>" +
-                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Writer: </b>" + obj.writer + "</p>" +
-                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Genre: </b>" + obj.genre + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Actors: </b>" + obj.actors + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Director: </b>" + obj.directors + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Writer: </b>" + obj.writers + "</p>" +
+                         "<p style='height: 36px; margin-top: 0px; margin-bottom: 0px;'> <b>Genre: </b>" + obj.genres + "</p>" +
                     "</div>" +
                     "<div class='col-sm-4'>" +
                         "<div class='rateyo' id='rateyo_" + obj.movieId + "'></div>" +

@@ -130,7 +130,7 @@ def movies_detail_data(request):
                                             nr_results_shown=nr_results_shown,
                                             user_id=request.user.id)
     nr_results_total = query_movie_details.get_nr_results()
-
+    print(nr_results_total)
     nr_pages_total = int(np.ceil(nr_results_total / nr_results_shown))
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
