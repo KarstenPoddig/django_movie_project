@@ -4,8 +4,16 @@ staff user)
 
 #################################################################################"""
 
-from movie_app.views.views_output_object import OutputObject
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
+from django_movie_project.views import OutputObject
 from movie_app.sql_query.sql_query import AnalysisNrRatingsHistogram
+
+
+class Analysis(LoginRequiredMixin, TemplateView):
+    """This view is the template class for the Analys site. This site
+    contains statistical summaries."""
+    template_name = 'movie_app/analysis.html'
 
 
 def analysis_histogram_data(request):

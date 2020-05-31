@@ -32,7 +32,7 @@
             <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'all-movies-overview' %}">All Movies</a>
-            <a href="{% url 'rated-movies-overview' %}">Rated Movies</a>
+            <a href="{% url 'rated-movies-details' %}">Rated Movies</a>
             <ul style="list-style-type:none; padding-left: 20px;">
                 <li><a href="{% url 'rated-movies-cluster' %}">Clusters of Rated Movies</a></li>
                 <li><a href="{% url 'rated-movies-statistics' %}">Stastistics</a></li>
@@ -65,7 +65,7 @@
                     <div class="col-sm-4" align="right" style="font-size: 20px;">
                         {% if user.is_authenticated %}
                         {{ user.username }}
-                        <a href="{% url 'logout' %}?next={% url 'rated-movies-overview' %}">
+                        <a href="{% url 'logout' %}?next={% url 'rated-movies-details' %}">
                             <button class="button">Logout</button>
                         </a>
                         {% else %}
