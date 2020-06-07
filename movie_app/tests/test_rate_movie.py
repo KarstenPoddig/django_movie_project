@@ -47,3 +47,19 @@ class RateMovie(TestCase):
         # check if rating exists (number of query results should be 0)
         self.assertEqual(0, len(Rating.objects.filter(user=self.user,
                                                       movie__movieId=5)))
+
+    # test rejection of rating, if rating has not a valid value
+    def test_rate_movie_invalid_value(self):
+        # rate movie
+        request = self.factory.get(
+            'movie_app/rate_movie/',
+            {'movieId': 6,
+             'rating': 3.65}
+        )
+        request.user = self.user
+        response = rate_movie(request)
+        self.assertEqual(response.content.decode('utf-8'),
+                         'rating invalid.')
+        self.assertEqual(len(Rating.objects.filter(user=self.user,
+                                                   movie__movieId=6)),
+                         0)

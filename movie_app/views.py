@@ -160,6 +160,9 @@ def rate_movie(request):
     movieId = int(request.GET.get('movieId'))
     rating = float(request.GET.get('rating'))
 
+    if rating not in [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]:
+        return HttpResponse('rating invalid.')
+
     ratings = Rating.objects.filter(user=request.user,
                                     movie__movieId=movieId)
 

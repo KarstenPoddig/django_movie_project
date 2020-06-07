@@ -5,6 +5,8 @@ import json
 
 
 class QualityOfProfileTest(TestCase):
+    """This class tests the behaviour of the function
+    'quality_of_profile'."""
     def setUp(self):
         self.factory = RequestFactory()
 
