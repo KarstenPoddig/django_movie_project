@@ -7,3 +7,4 @@ sklearn
 wheel
 gunicorn
 psycopg2
+django-test-without-migrations

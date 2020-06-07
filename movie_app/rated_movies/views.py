@@ -1,5 +1,6 @@
+import numpy as np
 import pandas as pd
-from movie_app.models import Rating
+from movie_app.models import Movie, Rating
 from django.db.models import Count
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
@@ -26,9 +27,15 @@ def hist_ratings_data(request):
         pd.DataFrame.from_records(
             Rating.objects.filter(user=request.user).values('rating')
                 .annotate(Count('movie_id'))
-        ).to_dict('list')
-    # rename column 'movie_id__count' to 'nr_ratings'
-    data['nr_ratings'] = data.pop('movie_id__count')
+        )
+    # if user didnt rate movies return empty structure
+    if data.empty:
+        data = {'rating': [], 'nr_ratings': []}
+    else:
+        data = data.to_dict('list')
+        # rename column 'movie_id__count' to 'nr_ratings'
+        data['nr_ratings'] = data.pop('movie_id__count')
+
     output = OutputObject(status='normal',
                           data=data)
     return output.get_http_response()
@@ -61,4 +68,18 @@ def rated_movies_cluster_data(request):
     else:
         output = OutputObject(status='normal',
                               data=data)
+    return output.get_http_response()
+
+
+def ratings_per_year_data(request):
+    movies = pd.DataFrame.from_records(Rating.objects.filter(user=request.user)
+                                       .values('movie_id', 'movie__year'))
+    if movies.empty:
+        movies = pd.DataFrame(columns=['year', 'nr_ratings'])
+    else:
+        movies['year'] = np.floor(movies['movie__year']/10)*10
+        movies = movies.groupby('year')['movie_id'].count().reset_index()
+        movies.columns = ['year', 'nr_ratings']
+    output = OutputObject(status='normal',
+                          data=movies.to_dict('list'))
     return output.get_http_response()

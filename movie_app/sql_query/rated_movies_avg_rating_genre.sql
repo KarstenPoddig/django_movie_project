@@ -10,3 +10,5 @@ select  g.genre
    and g."genreId" = mg.genre_id
 
  group by g.genre
+
+ order by avg_rating desc

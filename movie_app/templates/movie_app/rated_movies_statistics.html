@@ -60,9 +60,13 @@
         var url_rated_movies_statistics_hist_genre_data = '{% url 'rated-movies-statistics-hist-genre-data' %}';
         getHistGenre();
 
-        var url_rated_movies_statistics_avg_ratings_genre_data =
-            '{% url 'rated-movies-statistics-avg-rating-genre-data' %}';
+        var url_avg_ratings_genre_data =
+            '{% url 'avg-rating-genre-data' %}';
         getAvgRatingGenre();
+
+        var url_ratings_per_year = '{% url 'ratings-per-year' %}';
+        getRatingsPerYear();
+
     </script>
 
     {% endif %}

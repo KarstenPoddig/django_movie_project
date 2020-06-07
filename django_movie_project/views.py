@@ -2,8 +2,7 @@ from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect
 from .forms import SignUpForm
 from movie_app.models import ClusteringStatus
-import json
-from django.http import HttpResponse
+from django.http import JsonResponse
 
 
 def signup(request):
@@ -46,5 +45,4 @@ class OutputObject:
 
     def get_http_response(self):
         self.build_output_dict()
-        return HttpResponse(json.dumps(self.output_dict),
-                            'application/json')
+        return JsonResponse(data=self.output_dict)

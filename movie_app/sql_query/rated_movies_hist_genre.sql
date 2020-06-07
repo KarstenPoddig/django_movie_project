@@ -12,4 +12,5 @@ select g.genre
 
  group by g.genre
 
- order by nr_ratings desc
+ order by  nr_ratings desc
+          ,genre asc

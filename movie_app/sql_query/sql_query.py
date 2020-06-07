@@ -24,7 +24,11 @@ class RawSQLQuery:
         self.cursor.execute(query)
         results = pd.DataFrame(self.cursor.fetchall())
         results.replace(np.nan, replace_na, inplace=True)
-        results.columns = self.get_col_names_from_cursor()
+        # TODO: implement behaviour for empty result
+        if results.empty:
+            results = pd.DataFrame(columns=self.get_col_names_from_cursor())
+        else:
+            results.columns = self.get_col_names_from_cursor()
         # return results as DataFrame
         if type == 'DataFrame':
             return results
@@ -210,9 +214,8 @@ class AnalysisNrRatingsHistogram(RawSQLQuery):
                           'r', encoding='utf-8-sig').read()
 
     def get_data(self):
-        results = self.get_data_basic(query=self.query,
+        return self.get_data_basic(query=self.query,
                                       orient='list')
-        return results
 
 
 """#####################################################################
@@ -252,6 +255,8 @@ class RatedMoviesAvgGenre(RawSQLQuery):
                                         str(user_id))
 
     def get_data(self):
-        return self.get_data_basic(query=self.query,
+        data = self.get_data_basic(query=self.query,
                                    type='dict',
                                    orient='list')
+        data['avg_rating'] = [round(rating, 2) for rating in data['avg_rating']]
+        return data

@@ -31,6 +31,9 @@ urlpatterns = [
     # data for average rating per genre
     path('statistics/avg_rating_genre_data/',
          views.avg_rating_per_genre_data,
-         name='rated-movies-statistics-avg-rating-genre-data'),
-
+         name='avg-rating-genre-data'),
+    # data for ratings per year
+    path('statistics/ratings_per_year_data/',
+         views.ratings_per_year_data,
+         name='ratings-per-year'),
 ]

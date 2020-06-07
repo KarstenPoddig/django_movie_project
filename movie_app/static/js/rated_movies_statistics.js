@@ -3,12 +3,12 @@
 //------------------- Histogram - Ratings -------------------------------------------
 
 var hist_ratings_data = {
-    labels: [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5],
+    labels: [],
     datasets: [{
         label: 'Ratings',
         backgroundColor: '#dddddd',
         borderWidth: 1,
-        data: [1, 3, 1, 5, 5, 1, 4, 6, 9, 3]
+        data: [] //[1, 3, 1, 5, 5, 1, 4, 6, 9, 3]
     }]
 };
 
@@ -95,12 +95,12 @@ var getHistGenre = function(){
 //------------------- Average Rating per Genre -------------------------------------------
 
 var avg_rating_per_genre_data = {
-    labels: ['Action', 'Thriller', 'Comedy', 'Horror'],
+    labels: [],
     datasets: [{
         label: 'Ratings',
         backgroundColor: '#dddddd',
         borderWidth: 1,
-        data: [3.0, 0.5, 1.0, 5.0]
+        data: []
     }]
 }
 
@@ -127,7 +127,7 @@ var bar_avg_rating_per_genre = new Chart(ctx_avg_rating_per_genre, {
 var getAvgRatingGenre = function(){
     $.ajax({
         type: 'GET',
-        url: url_rated_movies_statistics_avg_ratings_genre_data,
+        url: url_avg_ratings_genre_data,
         dataType: 'json',
         cache: true,
         success: function(json_result){
@@ -140,15 +140,15 @@ var getAvgRatingGenre = function(){
 }
 
 
-//------------------- Average Rating per Genre -------------------------------------------
+//------------------- Number of Rating per Year -------------------------------------------
 
 var hist_rating_year_data = {
-labels: [1970, 1980, 1990, 2000, 2010],
+labels: [],
     datasets: [{
         label: 'Ratings',
         backgroundColor: '#dddddd',
         borderWidth: 1,
-        data: [10, 5, 13, 22, 17]
+        data: []
     }]
 }
 
@@ -170,3 +170,19 @@ var hist_rating_year = new Chart(ctx_hist_rating_year, {
         }
     }
 });
+
+var getRatingsPerYear = function(){
+
+    $.ajax({
+        type: 'GET',
+        url: url_ratings_per_year,
+        dataType: 'json',
+        cache: true,
+        success: function(json_result){
+            console.log(json_result);
+            hist_rating_year.data.labels = json_result['data']['year'];
+            hist_rating_year.data.datasets[0].data = json_result['data']['nr_ratings'];
+            hist_rating_year.update();
+        }
+    });
+};
