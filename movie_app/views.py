@@ -168,7 +168,6 @@ def rate_movie(request):
         # one entry exists -> delete this entry
         if len(ratings) == 1:
             ratings[0].delete()
-            print('delete')
             update_movie_clusters(user=request.user,
                                   movieId=movieId,
                                   rating_action='deleted')
@@ -181,7 +180,6 @@ def rate_movie(request):
                                   movie=Movie.objects.get(movieId=movieId),
                                   rating=rating)
             rating_entry.save()
-            print('created')
             update_movie_clusters(user=request.user,
                                   movieId=movieId,
                                   rating_action='created')
