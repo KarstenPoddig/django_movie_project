@@ -4,6 +4,7 @@ import numpy as np
 from django.db.models import Sum
 from movie_app.models import Rating, Movie, ClusteringStatus, Cluster, GenomeScore
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
+from sklearn.cluster import AgglomerativeClustering
 
 
 def join_movies_to_row_index(movies):
@@ -46,7 +47,7 @@ def update_movie_clusters(user, movieId, rating_action):
 
 
 def compute_new_clusters_movies(user):
-    clustered_movies = get_clustered_movies(user)
+    clustered_movies = get_clustered_movies_hierarchical(user)
     # delete old Clusters of user
     Cluster.objects.filter(user=user).delete()
     # saving the results
@@ -77,27 +78,47 @@ def compute_cluster_description(movieIds):
     return result
 
 
+"""########################################################################
+
+Clustering Algorithms
+
+########################################################################"""
+
+
 def get_clustered_movies(user):
     distance_rank_log = load_distance_matrix()
     rated_movies = get_rated_movies_user(user)
     rated_movies = join_movies_to_row_index(movies=rated_movies)
-    distance_rank_log_user = distance_rank_log[rated_movies.row_index, :]
-    # delete distance rank log to free memory
-    del distance_rank_log
-    distance_rank_log_user = distance_rank_log_user[:, rated_movies.row_index]
+    distance_rank_log = distance_rank_log[rated_movies.row_index, :]
+    print(distance_rank_log.shape)
+    distance_rank_log = distance_rank_log[:, rated_movies.row_index]
     rated_movies['row_index'] = list(range(0, rated_movies.shape[0]))
     clustered_movies = initiate_clusters(movies=rated_movies,
-                                         distance_matrix=distance_rank_log_user)
+                                         distance_matrix=distance_rank_log)
     print('Preclustering of movies done.')
-    # clustered_movies = cluster_algorithm_1(movies=clustered_movies,
-    #                                        distance_matrix=distance_rank_log_user)
+    clustered_movies = cluster_algorithm_1(movies=clustered_movies,
+                                           distance_matrix=distance_rank_log)
     return clustered_movies
+
+
+def get_clustered_movies_hierarchical(user):
+    distance_matrix = load_distance_matrix()
+    rated_movies = get_rated_movies_user(user)
+    rated_movies = join_movies_to_row_index(movies=rated_movies)
+    distance_matrix = distance_matrix[rated_movies.row_index, :]
+    distance_matrix = distance_matrix[:, rated_movies.row_index]
+    clustering_model = AgglomerativeClustering(n_clusters=8,
+                                               affinity='precomputed',
+                                               linkage='complete')
+    clustering_model.fit(distance_matrix)
+    rated_movies['cluster'] = clustering_model.labels_
+    return rated_movies
 
 
 def assign_movie_to_cluster(user, movieId):
     rated_movies = get_rated_movies_user(user)
     cluster_id = get_best_cluster_for_movie(movies=rated_movies,
-                                         movieId=movieId)
+                                            movieId=movieId)
     if cluster_id is None:
         return None
     cluster = Cluster.objects.get(id=cluster_id)

@@ -2,46 +2,11 @@ import json
 import numpy as np
 import pandas as pd
 from django.http import HttpResponse
-from django.db.models import Count, Avg
 from movie_app.models import Movie, Rating
-from movie_app.recommendation_models import load_data
-from movie_app.suggestions_cluster import update_movie_clusters
+from movie_app.clustering.suggestions_cluster import update_movie_clusters
 from django_movie_project.views import OutputObject
 from movie_app.sql_query.sql_query import QueryMovieDetails
 from django.views.generic import TemplateView
-
-"""
-################### General comments ##############################################
-
-the frame for the pages are the classes
-    - HomeView ->       http://.../movie_app/
-    - RatedMovies ->    http://.../movie_app/rated_movies/
-    - AllMovies ->      http://.../movie_app/movies/
-    - SuggestionView -> http://.../movie_app/suggestions/
-    - AnalysisView ->   http://.../movie_app/analysis/
-(see the file urls.py)
-
-
-Philosophy / Architecture:
-
-These classes are just empty cases. The actual contents are loaded through
-jquery-requests, which then call the functions
-    - movie_search_short
-    - movie_search_long
-    - rate_movie
-    - similar_movies
-    - suggested_movies 
-(see the file urls.py)
-These functions then return data (based on the request) in json format. 
-Afterwards the passed data again is processed and shown with javascript.
-
-The purpose of this architecture is to make the pages more dynamic (-> single
-page applications). (i.e. updating only certain parts of the pages)
-Otherwise the page would need to be reloaded completely and therefore be less 
-dynamic.
-
-###################################################################################
-"""
 
 
 class HomeView(TemplateView):
@@ -74,44 +39,6 @@ def movie_search_short(request, only_rated_movies):
         data = 'fail'
     mimetype = 'application/json'
     return HttpResponse(data, mimetype)
-
-
-"""############## Movie Querys #####################################################
-
-The tabs "All Movies" and "Rated Movies" contain detailed information of the
-listed movies from several tables in the database (movie, genre, actors, ratings, 
-etc.). To collect these informations several join and filter operations are necessary.
-Therefore, instead of using the Django ORM, a query is built with the functions 
-    - build_movie_query
-    - get_nr_results_movie_query
-    - get_year_filter_str
-    - get_genre_filter_str.
-Afterwards the generated query is executed directly on the database.
-
-There are several building blocks in the path 'movie_app/sql_query/' with which
-the final query is generated. These building blocks contain placeholders which are
-replaced with variables (input of build_movie_query, like LIMIT, TERM, etc.).
-
-The tabs "All Movies" and "Rated Movies" contain the functionality to restrict
-the query results to certain genres, production years or just to show rated movies.
-The regarding code in the WHERE-clause of the final query is contained in the files
-    - movie_app/sql_query/year_filter.txt
-    - movie_app/sql_query/genre_filter.txt
-    - movie_app/sql_query/rated_filter.txt
-
-The functions build_movie_query and get_nr_results_movie_query adds the regarding
-code if actual restrictions are active.
-
-The function get_nr_results_movie_query is somehow redundant, because one could only
-run the function build_movie_query and count the results. But in this situation a lot
-of data would be passed (thousands of movies).
-Instead the movie query is executed for collecting only the information on each page.
-To compute the total number of pages of results (i.e. when movies with a certain term 
-or movies of a certain genre are searched) get_nr_results_movie_query is used, so 
-that the total number of pages of the result can be computed (to navigate through 
-the query results).
-
-##################################################################################"""
 
 
 def movies_detail_data(request):
@@ -196,112 +123,6 @@ def rate_movie(request):
             print('Error - multiple entries found')
 
     return HttpResponse('Done')
-
-
-"""################# Movie Suggestions ##############################################
-
-The class SuggestionView is the frame for the tab "Movie Suggestions".
-
-It contains the secions
-- Movie Suggestions
-- Similar Movies
-
-# Movie Suggestions
-
-If a logged in user opens the page "Movie Suggestions" a javascript routine calls
-the url suggested_movies and consequently the function "suggested_movies" (in 
-this file). The result is returned in json format.
-Depending on the input this function returns a list of suggested movies. There 
-are several ways how the suggested movies are determined:
-    - top movies based on the Movielen ratings (and therefore on this app)
-    - top movies based on the imdb rating
-    - personal recommendation: movies based on the similarity and ratings 
-      of the regarding user. For the explanation of the algorithm  take a look 
-      at the README-file (or documentation)
-
-
-# Similar Movies
-
-If the user enters a Movie in the search field a javascript routine calls the 
-function "similar_movies". This function loads the similarity matrix and finds 
-the most similar movies. The result is returned in json format.
-
-###############################################################################"""
-
-
-def drop_rated_movies(movies, movies_to_drop):
-    movies = movies[~movies.movieId.isin(movies_to_drop)]
-    return movies
-
-
-def get_top_movielen_movies(user, nr_movies):
-    query_result = Rating.objects.values('movie_id').annotate(Count('rating'), Avg('rating')) \
-        .filter(rating__count__gte=50).order_by('-rating__avg')
-    movies = pd.DataFrame.from_records(query_result).drop('rating__count', axis=1)
-    movies.columns = ['movieId', 'rating_pred']
-    movies = drop_rated_movies(movies, user)
-    movies = movies[:nr_movies]
-    return movies
-
-
-def get_top_movies_imdb(user, nr_movies):
-    movies = pd.DataFrame.from_records(
-        Movie.objects.all().order_by('-imdbRating').values('movieId', 'imdbRating')
-    )
-    movies.columns = ['movieId', 'rating_pred']
-    movies.dropna(axis=0, inplace=True)
-    movies = drop_rated_movies(movies, user)
-    movies = movies[:nr_movies]
-    return movies
-
-
-def get_top_movies_similarity(rated_movies, nr_movies, movies_to_drop):
-    similarity_matrix = load_data.load_similarity_matrix()
-    similarity_matrix = similarity_matrix
-    movie_index = load_data.load_movie_index()
-
-    rated_movies = rated_movies.merge(movie_index, how='inner',
-                                      left_on='movie_id', right_on='movieId')
-
-    # build rating vector
-    rating_vector = np.array(rated_movies.rating)
-
-    # select only the relevant part of the similarity_matrix
-    similarity_matrix = similarity_matrix[:, rated_movies.row_index]
-
-    # transform similarity matrix if number of rated movies is greater than 15
-    nr_relev_movies = min(15, similarity_matrix.shape[1])
-    if similarity_matrix.shape[1] > 15:
-        for i in range(similarity_matrix.shape[0]):
-            row = similarity_matrix[i]
-            similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
-
-    sum_similarities = similarity_matrix.sum(axis=1)
-    rating_pred = np.dot(similarity_matrix, rating_vector) / sum_similarities
-
-    # compute score for suggestions
-    score_rating = rating_pred/5.0
-    score_similarity = sum_similarities/nr_relev_movies
-
-    score = 0.5*score_similarity + 0.5*score_rating
-
-    rating_pred = pd.DataFrame({'rating_pred': rating_pred,
-                                'score': score})
-    rating_pred.reset_index(inplace=True)
-    rating_pred.columns = ['row_index', 'rating_pred', 'score']
-
-    rating_pred = movie_index.merge(rating_pred, on='row_index',
-                                    how='inner')
-    rating_pred = rating_pred[['movieId', 'rating_pred', 'score']]
-
-    # drop movies already rated
-    rating_pred = drop_rated_movies(movies=rating_pred,
-                                    movies_to_drop=movies_to_drop)
-    rating_pred.sort_values(by='score', ascending=False, inplace=True)
-    rating_pred = rating_pred[:nr_movies]
-    rating_pred.sort_values(by='rating_pred', ascending=False, inplace=True)
-
-    return rating_pred
 
 
 def get_movies(movie_ids):
