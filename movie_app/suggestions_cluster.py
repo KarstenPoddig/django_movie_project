@@ -29,6 +29,7 @@ def update_movie_clusters(user, movieId, rating_action):
     """
     nr_movies = Rating.objects.filter(user=user).count()
     if (nr_movies % 20) == 0 and nr_movies > 0:
+        print('Clusters are computed')
         clustering_status = ClusteringStatus.objects.filter(user=user)[0]
         clustering_status.status = 'Pending'
         clustering_status.save()
@@ -50,6 +51,7 @@ def compute_new_clusters_movies(user):
     Cluster.objects.filter(user=user).delete()
     # saving the results
     clusters = clustered_movies.cluster.unique()
+    print(clusters)
     # save clusters in Rating
     print(clustered_movies.head())
     for cluster in clusters:

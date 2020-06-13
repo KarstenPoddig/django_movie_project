@@ -76,7 +76,7 @@ from django.contrib.auth.models import User
 
 class Cluster(models.Model):
     """Model stores the existing Clusters and their description"""
-    id = models.IntegerField(primary_key=True)
+    # id = models.IntegerField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.CharField(max_length=100, null=True)
 

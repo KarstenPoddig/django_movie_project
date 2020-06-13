@@ -136,7 +136,6 @@ def movies_detail_data(request):
                                             nr_results_shown=nr_results_shown,
                                             user_id=request.user.id)
     nr_results_total = query_movie_details.get_nr_results()
-    print(nr_results_total)
     nr_pages_total = int(np.ceil(nr_results_total / nr_results_shown))
     page_number = min(nr_pages_total, page_number)
     # perform the actual query
@@ -269,13 +268,22 @@ def get_top_movies_similarity(rated_movies, nr_movies, movies_to_drop):
 
     # select only the relevant part of the similarity_matrix
     similarity_matrix = similarity_matrix[:, rated_movies.row_index]
+
+    # transform similarity matrix if number of rated movies is greater than 15
     nr_relev_movies = min(15, similarity_matrix.shape[1])
-    for i in range(similarity_matrix.shape[0]):
-        row = similarity_matrix[i]
-        similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
-    score = np.dot(similarity_matrix, rating_vector)
+    if similarity_matrix.shape[1] > 15:
+        for i in range(similarity_matrix.shape[0]):
+            row = similarity_matrix[i]
+            similarity_matrix[i, row.argsort()[:-nr_relev_movies]] = 0
+
     sum_similarities = similarity_matrix.sum(axis=1)
-    rating_pred = score / sum_similarities
+    rating_pred = np.dot(similarity_matrix, rating_vector) / sum_similarities
+
+    # compute score for suggestions
+    score_rating = rating_pred/5.0
+    score_similarity = sum_similarities/nr_relev_movies
+
+    score = 0.5*score_similarity + 0.5*score_rating
 
     rating_pred = pd.DataFrame({'rating_pred': rating_pred,
                                 'score': score})
