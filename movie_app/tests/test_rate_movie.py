@@ -2,7 +2,7 @@ from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import User
 from movie_app.models import Movie, Rating
 import json
-from movie_app.views import rate_movie, drop_rated_movies
+from movie_app.views import rate_movie
 
 
 class RateMovie(TestCase):

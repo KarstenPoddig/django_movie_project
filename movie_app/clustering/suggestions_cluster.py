@@ -4,7 +4,7 @@ import numpy as np
 from django.db.models import Sum
 from movie_app.models import Rating, Movie, ClusteringStatus, Cluster, GenomeScore
 from movie_app.recommendation_models.load_data import load_distance_matrix, load_movie_index
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, DBSCAN
 
 
 def join_movies_to_row_index(movies):
@@ -107,9 +107,12 @@ def get_clustered_movies_hierarchical(user):
     rated_movies = join_movies_to_row_index(movies=rated_movies)
     distance_matrix = distance_matrix[rated_movies.row_index, :]
     distance_matrix = distance_matrix[:, rated_movies.row_index]
-    clustering_model = AgglomerativeClustering(n_clusters=8,
+    nr_clusters = get_nr_of_clusters(nr_all_movies=rated_movies.shape[0])
+    clustering_model = AgglomerativeClustering(n_clusters=nr_clusters,
                                                affinity='precomputed',
                                                linkage='complete')
+    # clustering_model = DBSCAN(eps=5.0, metric='precomputed',
+    #                           min_samples=5)
     clustering_model.fit(distance_matrix)
     rated_movies['cluster'] = clustering_model.labels_
     return rated_movies
@@ -148,6 +151,11 @@ def get_nr_movies_per_cluster(nr_all_movies):
     nr_clusters = min(2+0.05*nr_all_movies, 8)
     nr_movies_per_cluster = int(np.ceil(nr_all_movies/nr_clusters))
     return nr_movies_per_cluster
+
+
+def get_nr_of_clusters(nr_all_movies):
+    nr_clusters = round(min(2+0.03*nr_all_movies, 5))
+    return nr_clusters
 
 
 def get_rank_score(movies, distance_matrix):
@@ -219,7 +227,7 @@ def cluster_algorithm_1(movies, distance_matrix):
         score_cluster_2_new = get_rank_score(movies=movies[movies.cluster_tmp == cluster_2],
                                              distance_matrix=distance_matrix)
         if (score_cluster_1_new + score_cluster_2_new) < (score_cluster_1_old + score_cluster_2_old):
-            # print(movie_quiindex.loc[[entry_1, entry_2]])
+            # print(movie_index.loc[[entry_1, entry_2]])
             movies['cluster'] = movies['cluster_tmp']
             # print(movie_index.loc[[entry_1, entry_2]])
             print('Iter: ' + str(cnt_iter) +

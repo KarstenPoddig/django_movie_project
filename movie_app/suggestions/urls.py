@@ -12,6 +12,7 @@ urlpatterns = [
     path('cluster_data/', views.suggestions_cluster_data,
          name='suggestions-cluster-data'),
 
+
     # Suggestions: Similar Movies
     # path of template page
     path('similar_movies/',

@@ -240,4 +240,3 @@ def get_top_movies_similarity(rated_movies, nr_movies, movies_to_drop):
 
     return rating_pred
 
-

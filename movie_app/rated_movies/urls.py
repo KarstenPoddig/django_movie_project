@@ -7,6 +7,10 @@ urlpatterns = [
     path('', views.RatedMovies.as_view(),
          name='rated-movies-details'),
 
+    # path to refresh cluster of a user
+    path('refresh_cluster/', views.refresh_cluster,
+         name='refresh-cluster'),
+
     # data for rating histogram
     path('statistics/hist_ratings_data/',
          views.hist_ratings_data,

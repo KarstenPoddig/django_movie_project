@@ -264,6 +264,7 @@ var getSingleMovie = function(search_elem, result_elem){
     });
 };
 
+
 // This function creates the html-code for the Movie View (tabs: All Movies, Rated Movies)
 var getMovieViewDetailed = function(obj){
     return (
@@ -383,58 +384,6 @@ var getSimilarMovies = function(movieId){
 }
 
 
-var getMovieSuggestionsCluster = function(){
-
-    $('#suggested_movie_loader').show();
-
-    $.ajax({
-        type: 'GET',
-        url: url_suggestions_cluster_data,
-        dataType: 'json',
-        cache: true,
-        success: function(json_result){
-            console.log(json_result)
-            htmlString = '';
-            // catch errors
-            if(json_result['meta']['status']=='exception'){
-                htmlString = json_result['meta']['message']
-            }
-            // display movie suggestions
-            else{
-                data = json_result['data']
-                clusters = Object.keys(data)
-                for(var i=0; i < clusters.length; i++){
-                    cluster = clusters[i]
-                    //console.log(data[cluster])
-                    htmlString += "<h4>" + cluster + "</h4>" +
-                                  "<div class='row' align='center'>" +
-                                    "<div class='cluster_tag_wrapper' align='center'>" +
-                                        getClusterTagView(data[cluster]['tags']) +
-                                    "</div>" +
-                                  "</div>" +
-                                  "<div class='scrollmenu'>";
-                    for(var j=0; j<data[cluster]['movies'].length; j++){
-                        movie = data[cluster]['movies'][j];
-                        elem_ids = getMovieShortViewElemIds(movieId = movie.movieId, row=i)
-                        // append movie to html
-                        htmlString += getMovieViewShort(obj=movie, elem_ids=elem_ids, type='prediction');
-                    }
-                    htmlString += "</div>";
-                }
-            }
-            document.getElementById('suggested_movie_cluster_area').innerHTML = htmlString;
-
-            $('#suggested_movie_loader').hide();
-
-            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
-            for(var i=0; i<movie_info_elements.length; i++){
-                movie_info_elements[i].hidden = true;
-            }
-        }
-    });
-}
-
-
 var toggleMovieInfo = function(elem){
     movie_info_elem_id = dict_movie_picture_info[elem.id];
     movie_info_elem = document.getElementById(movie_info_elem_id);
@@ -446,113 +395,6 @@ var toggleMovieInfo = function(elem){
     }
 }
 
-var getMovieSuggestionsActor = function(){
-
-    $('#suggested_movie_loader').show();
-
-    $.ajax({
-        type: 'GET',
-        url: url_suggestions_actor_data,
-        dataType: 'json',
-        cache: true,
-        success: function(json_result){
-            console.log(json_result)
-            htmlString = '';
-            // catch errors
-            if(json_result['meta']['status']=='exception'){
-                htmlString = json_result['meta']['message']
-            }
-            // display movie suggestions
-            else{
-                data = json_result['data']
-                actors = Object.keys(data)
-                for(var i=0; i < actors.length; i++){
-                    actor = actors[i]
-                    //console.log(data[cluster])
-                    htmlString += "<h4>" + actor + "</h4>"
-                    htmlString += "<div class='scrollmenu'>";
-                    for(var j=0; j<data[actor].length; j++){
-                        obj = data[actor][j];
-                        // append movie to dict_movie_picture_info
-                        elem_ids = getMovieShortViewElemIds(movieId=obj.movieId, row=i)
-                        // append movie to html
-                        htmlString += getMovieViewShort(obj, elem_ids, type='else');
-                    }
-                    htmlString += "</div>";
-                }
-            }
-            document.getElementById('suggested_movie_cluster_area').innerHTML = htmlString;
-
-            $('#suggested_movie_loader').hide();
-
-            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
-            for(var i=0; i<movie_info_elements.length; i++){
-                movie_info_elements[i].hidden = true;
-            }
-        }
-    });
-}
-
-var getRatedMoviesClustered = function(){
-
-    $('#clustered_movie_loader').show();
-
-    $.ajax({
-        type: 'GET',
-        url: url_rated_movies_cluster_data,
-        dataType: 'json',
-        cache: true,
-        success: function(json_result){
-            console.log(json_result)
-            htmlString = '';
-            // catch errors
-            if(json_result['meta']['status'] == 'exception'){
-                htmlString = json_result['meta']['message']
-            }
-            // display movie suggestions
-            else{
-                data = json_result['data']
-                clusters = Object.keys(data)
-                for(var i=0; i < clusters.length; i++){
-                    cluster = clusters[i]
-                    // tag list
-                    htmlString += "<h4>" + cluster + "</h4>" +
-                                  "<div class='row' align='center'>" +
-                                    "<div class='cluster_tag_wrapper' align='center'>" +
-                                        getClusterTagView(data[cluster]['tags']) +
-                                    "</div>" +
-                                  "</div>" +
-                                  "<div class='scrollmenu'>";
-                    for(var j=0; j<data[cluster]['movies'].length; j++){
-                        movie = data[cluster]['movies'][j];
-                        // append movie to dict_movie_picture_info
-                        elem_ids = getMovieShortViewElemIds(movieId=movie.movieId, row=i)
-                        // append movie to html
-                        htmlString += getMovieViewShort(movie, elem_ids, type='else');
-                    }
-                    htmlString += "</div>";
-                }
-            }
-            document.getElementById('clustered_movie_area').innerHTML = htmlString;
-
-            $('#clustered_movie_loader').hide();
-
-            movie_info_elements = document.getElementsByClassName('movie_view_short_info')
-            for(var i=0; i<movie_info_elements.length; i++){
-                movie_info_elements[i].hidden = true;
-            }
-        }
-    })
-}
-
-var getClusterTagView = function(tags){
-    htmlString = '';
-    for(var i=0; i<tags.length; i++){
-        tag = tags[i];
-        htmlString += "<div class='cluster_tag_elem'>" + tag + "</div>"
-    }
-    return htmlString
-}
 
 var get_quality_of_profile = function(){
 
@@ -591,4 +433,14 @@ var get_quality_of_profile = function(){
 var closeQualityProfileInfo = function(){
     var elem = document.getElementById('profile_quality_status');
     elem.hidden = true;
+}
+
+
+var getClusterTagView = function(tags){
+    htmlString = '';
+    for(var i=0; i<tags.length; i++){
+        tag = tags[i];
+        htmlString += "<div class='cluster_tag_elem'>" + tag + "</div>"
+    }
+    return htmlString
 }
