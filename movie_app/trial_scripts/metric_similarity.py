@@ -27,7 +27,7 @@ ratings_test = ratings[:0]
 for user in relevant_user:
     ratings_user = ratings[ratings.userId == user]
     ratings_user_train, ratings_user_test = train_test_split(ratings_user,
-                                                             test_size=0.05)
+                                                             test_size=0.1)
     print('user: ' + str(user) +
           ', train_size: ' + str(ratings_user_train.shape) +
           ', test_size: ' + str(ratings_user_test.shape))
@@ -38,26 +38,35 @@ for user in relevant_user:
 ratings_test['predicted_rating'] = 0
 ratings_test['sum_similarity'] = 0
 
+# create information if user votes mostly with full ratings
+ratings_train['full_rating'] = (np.mod(2*ratings_train['rating'], 2) == 0)
+full_rating_user = ratings_train[['userId', 'full_rating']].groupby('userId').aggregate({'full_rating': 'mean'})
+
+
 for user in relevant_user:
     ratings_test_user = ratings_test[ratings_test.userId == user]
     ratings_train_user = ratings_train[ratings_train.userId == user]
     similarity_matrix_user = similarity_matrix[movie_index.loc[ratings_test_user.movieId].to_numpy().reshape(-1), :]
     similarity_matrix_user = similarity_matrix_user[:, movie_index.loc[ratings_train_user.movieId].to_numpy().reshape(-1)]
     ratings_train_array = ratings_train_user.rating.to_numpy()
-    nr_relev_movies = min(10, similarity_matrix_user.shape[1])
+    nr_relev_movies = min(15, similarity_matrix_user.shape[1])
     for i in range(similarity_matrix_user.shape[0]):
         row = similarity_matrix_user[i]
         similarity_matrix_user[i, row.argsort()[:-nr_relev_movies]] = 0
     sum_similarity_array = np.sum(similarity_matrix_user, 1)
-    ratings_test_user['predicted_rating'] = np.dot(similarity_matrix_user, ratings_train_array)
     ratings_test_user['sum_similarity'] = sum_similarity_array
+    ratings_test_user['predicted_rating'] = np.dot(similarity_matrix_user, ratings_train_array) / ratings_test_user['sum_similarity']
+    # rounding the result
+    if full_rating_user.loc[user]['full_rating'] > 0.95:
+        ratings_test_user['predicted_rating'] = np.round(ratings_test_user['predicted_rating'])
+    else:
+        ratings_test_user['predicted_rating'] = np.round(ratings_test_user['predicted_rating']/0.5)*0.5
     ratings_test.loc[ratings_test_user.index, 'predicted_rating'] = ratings_test_user['predicted_rating']
     ratings_test.loc[ratings_test_user.index, 'sum_similarity'] = ratings_test_user['sum_similarity']
 
 
-ratings_test['predicted_rating'] = ratings_test['predicted_rating']/ratings_test['sum_similarity']
-ratings_test['error'] = ratings_test['rating'] - ratings_test['predicted_rating']
-ratings_test['predicted_rating'] = np.round(ratings_test['predicted_rating']/0.5)*0.5
+ratings_test['error'] = np.abs(ratings_test['rating'] - ratings_test['predicted_rating'])
+# ratings_test['predicted_rating'] = np.round(ratings_test['predicted_rating'])
 print(mean_squared_error(ratings_test['rating'], ratings_test['predicted_rating']))
 print(mean_absolute_error(ratings_test['rating'], ratings_test['predicted_rating']))
 print(np.corrcoef(ratings_test['error'], ratings_test['sum_similarity']))
@@ -65,6 +74,6 @@ print(np.corrcoef(ratings_test['error'], ratings_test['sum_similarity']))
 
 import matplotlib.pyplot as plt
 
-plt.hist(ratings_test['rating'], bins=50)
+# plt.hist(ratings_test['rating'], bins=50)
 plt.hist(ratings_test['predicted_rating'], bins=50)
 plt.show()
