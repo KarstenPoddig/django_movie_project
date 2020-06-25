@@ -42,9 +42,11 @@ The project described in this report is a Movie Recommendation Engine\\[2ex]
 \hspace{5mm}
 \includegraphics[scale=0.015]{logos/gcp_logo.png}
 \hspace{5mm}
+\includegraphics[scale=0.08]{logos/jenkins_logo.png}
+\hspace{5mm}
 \includegraphics[scale=0.15]{logos/js_logo.png}
 \hspace{5mm}
-\includegraphics[scale=0.05]{logos/git_logo.png}
+\includegraphics[scale=0.06]{logos/git_logo.png}
 \hspace{5mm}
 \includegraphics[scale=0.04]{logos/github_logo.png}
 
@@ -203,7 +205,7 @@ This page creates suggestions based on the actors which you liked best in averag
 
 
 % #################### Data Science Part #################################
-\section{Data Science Part}
+\section{Algorithms (Data Science Part)}
 
 In this section the algorithm on which the movie recommendation engine are explained.
 
@@ -224,14 +226,14 @@ The most important part to determine movie suggestions is the concept of similar
 \begin{boxedminipage}{\textwidth}
 \textbf{Short Excourse: Cosine Similarity}\\[2ex]
 Let $x, y \in \mathbb{R}^n$. Then the cosine similarity of these vectors is defined as
-\[ similarity(x,y) := \frac{\langle x,y\rangle}{\lVert x\rVert \lVert y \rVert} = \frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^nx_i^2}\sqrt{\sum_{i=1}^nx_i^2}},\]
+\[ \text{similarity}(x,y) := \frac{\langle x,y\rangle}{\lVert x\rVert \lVert y \rVert} = \frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^nx_i^2}\sqrt{\sum_{i=1}^nx_i^2}},\]
 where $\langle x,y\rangle$ is the scalar product (or inner product) of the two vectors and $\lVert x \rVert$ is the euclidian norm (l2 norm) of the vector $x$.
 The cosine similarity is in general a value between -1 and  1. The highest similarity is 1 and is achieved if and only if $x$ and $y$ there is a $\lambda > 0$ such that $y = \lambda x$.
 \end{boxedminipage}\\[2ex]
 We will apply the concept of the cosine similarity in the following way. Let $m, m' \in M$ be two arbitrary movies. The vector for each movie is the vector of ratings. If a user didn't rate a movie then the value in the vector is defined as zero. Written technically that means
 \[ \bar{r}_m = \begin{pmatrix} \bar{r}_{u_1,m} \\ .. \\ \bar{r}_{u_m, m}\end{pmatrix},~\text{where }\bar{r}_{u_i, m} := \begin{cases} r_{u_i,m}~\text{if }(u_i,m)\in R \\ 0~\text{else}\end{cases}.\]
 So now we get our similarity of movie $m, m'$ as
-\[ similarity(m,m'):= \frac{\langle \bar{r}_{m}, \bar{r}_{m'}\rangle}{\lVert \bar{r}_m \rVert \lVert \bar{r}_{m'} \rVert }.\]
+\[ \text{similarity}(m,m'):= \frac{\langle \bar{r}_{m}, \bar{r}_{m'}\rangle}{\lVert \bar{r}_m \rVert \lVert \bar{r}_{m'} \rVert }.\]
 Notice: Since all values in the vectors which appear here are greater or equal zero the similarity measure is always between zero and one. This makes the ongoing computations more comfortable, since we don't have to deal with negative similarites.
 The more parallel the vectors $\bar{r}_m, \bar{r}_{m'}$ are, the higher the  is the similarity of the movies $m$ and $m'$.\\
 Speaking freely: If two movies in general are rated similar by the same users then the movies are considered as similar.\\
@@ -247,14 +249,14 @@ The prediction $\hat{r}_{u,m}$ is simply the average value of the rating $(r_{u,
 Furthermore there are at most the 15 movies included. Using just a low number of movies for the prediction yields better results than using all movies. The number $k=15$ is chosen because heuristically for this value the evaluation metrics has shown the smallest error for the predictions (see subsection 3.6).\\
 This algorithm is known as the $k$ Nearest Neighbour Regression (with $k=15$).\\[2ex]
 Expressed in a more technical way: Let $u\in U$, $m\notin M_u$. Then
-\[ \hat{r}_{u,m} := \sum_{i=1}^{\min(15, |M_u|)} \left(\frac{similarity(m^{(i)}, m)}{\sum_{i=1}^{\min(15, |M_u|} similarity(m^{(i)}, m)} \right)~r_{u, m^{(i)}},\]
-where $(m^{(1)}, m^{(2)}, ....)\in M_u$ are the movies rated by $u$ sorted by the similarity to $m$. That means $(similarity(m^{(i)},m))_i$ is decreasing.
+\[ \hat{r}_{u,m} := \sum_{i=1}^{\min(15, |M_u|)} \left(\frac{\text{similarity}(m^{(i)}, m)}{\sum_{i=1}^{\min(15, |M_u|} \text{similarity}(m^{(i)}, m)} \right)~r_{u, m^{(i)}},\]
+where $(m^{(1)}, m^{(2)}, ....)\in M_u$ are the movies rated by $u$ sorted by the similarity to $m$. That means $(\text{similarity}(m^{(i)},m))_i$ is decreasing.
 
 
 \subsection{Clustering of Rated movies for a user}
 
 The next step is the clustering of rated movies. What is the purpose for this step? At first one could think to simply compute the rating predictions for all movies and then suggest the movies with the highest predicted values to the user. But in reality often people like different kind of movies. Depending on your mood, etc. you maybe want to watch a movie of a certain genre, topic, athmosphere and so on. Therefore the rated movies will be clustered and then for each cluster suggestions will be determined.\\
-The clustering algorithm to compute these clusters is the AgglomerativeClustering provided by the package scikit-learn. This algorithm needs the information which distance should be used to cluster the objects. Here we will use the option 'precomputed' and provide a matrix which is based on the similarity matrix in section 3.2 $(similarity(m,m'))_{m,m'\in M}$. The number of clusters also needs to be set at the beginning.\\[2ex]
+The clustering algorithm to compute these clusters is the AgglomerativeClustering provided by the package scikit-learn. This algorithm needs the information which distance should be used to cluster the objects. Here we will use the option 'precomputed' and provide a matrix which is based on the similarity matrix in section 3.2 $(\text{similarity}(m,m'))_{m,m'\in M}$. The number of clusters also needs to be set at the beginning.\\[2ex]
 \textbf{Creation of distance matrix}\\[2ex]
 The distance between the objects is often simply defined as the inverse of the similarity. But in this case there is a problem with this approach:\\
 Let's take two movies. First we take $m_1$ is 'Independence Day'. The second movie $m_2$ is 'Tinker Tailor Soldier Spy'. Then we enter these movies in the similarity view (section 2.5.2) and check the results in figures \ref{fig_sec3_similarity_1} and \ref{fig_sec3_similarity_2}.
@@ -272,17 +274,34 @@ As you can see the similarities for $m_1$ are much higher then for $m_2$. Anyway
 \caption{\textbf{Scatter plot for number of ratings per movie and summed up similarities to other movies}}\label{fig_scatter_nr_ratings_similarity}
 \end{figure}
 If one would simply take the inverse of the similarity as the distance the result is one big cluster including all blockbuster and some very small cluster with relatively unpopular movies.\\
-Therefore here we take the following approach: Instead of focusing on the absolute similarity values the distance is determined by the position in the similarity list. That means to compute the distance between the movie $m_1$ and the movie $m_2$ we identify which position $m_2$ has in the ordered list of movies (ordered  decreasingly by the similarity - $(similarity(m_1,m))_m$). So if $m_2$ is for example on the fifth position in the list of most similar movies to $m_1$ we have the value 5. To put more weight on the very low positions and less weight on very high positions the logarithm is applied to this value. Roughly speaking it should be important for the clustering if $m_2$ is the 1th or 10th most similar movie to $m_1$, but not if it is the 10001th or 10010th most similar movie. This is guaranteed by applying an increasing function with decreasing derivative. Other choices for this behaviour could be the function $x^{-\frac{1}{2}}$ or functions which are also used for the activation in neural networks (i.e. sigmoid, relu, softmax).
+Therefore here we take the following approach: Instead of focusing on the absolute similarity values the distance is determined by the position in the similarity list. That means to compute the distance between the movie $m_1$ and the movie $m_2$ we identify which position $m_2$ has in the ordered list of movies (ordered  decreasingly by the similarity - $(\text{similarity}(m_1,m))_m$). So if $m_2$ is for example on the fifth position in the list of most similar movies to $m_1$ we have the value 5. To put more weight on the very low positions and less weight on very high positions the logarithm is applied to this value. Roughly speaking it should be important for the clustering if $m_2$ is the 1th or 10th most similar movie to $m_1$, but not if it is the 10001th or 10010th most similar movie. This is guaranteed by applying an increasing function with decreasing derivative. Other choices for this behaviour could be the function $x^{-\frac{1}{2}}$ or functions which are also used for the activation in neural networks (i.e. sigmoid, relu, softmax).
 
 
 
 \subsection{Final Predictions}
 
 So we now have the algorithm for the prediction of a rating and a certain cluster of movies of a user. Which movies should we suggest based on the movies in the cluster?\\
-At first thought it sounds reasonable to compute predictions for all ratings based on the movies in this cluster and suggest the movies with the highest predicted values. But then there appears the following situation: Let's say a user has a cluster with mostly Animation Movies from Disney, etc. Since ratings for all movies will be computed there will also be a prediction for the rating of - let's say 'Texas Chainsaw Massacre'. The similarities between the movies in the cluster and 'Texas Chainsaw Massacre'will be quite low. Nevertheless the predicted rating is basically a weighted average which means that just the relative and not the total height of similarities are important for the prediction. This still makes sense since a prediction is simply the best estimate based on the rated movies. Therefore if the movies in the cluster which are the most similar to 'Texas Chainsaw Massacre' have high ratings, then the prediction for the rating of 'Texas Chainsaw Massacre' will also be high, even if the similarity of this movie to the cluster is low.\\
-This example shows that it is insufficient to solely focus on the predicted rating. Instead the similarity of a movie to a cluster should also be taken into account.\\
-Therefore to  
-
+At first thought it sounds reasonable to compute predictions for all ratings based on the movies in this cluster and suggest the movies with the highest predicted values. But then there occurs the following situation: Let's say a user has a cluster with mostly Animation Movies from Disney, etc. Since ratings for all movies will be computed there will also be a prediction for the rating of - let's say 'Texas Chainsaw Massacre'. The similarities between the movies in the cluster and 'Texas Chainsaw Massacre'will be quite low. Nevertheless the predicted rating is basically a weighted average which means that just the relative and not the total height of similarities are important for the prediction. This still makes sense since a prediction is simply the best estimate based on the rated movies. Therefore if the movies in the cluster which are the most similar to 'Texas Chainsaw Massacre' have high ratings, then the prediction for the rating of 'Texas Chainsaw Massacre' will also be high, even if the similarity of this movie to the movies in the cluster is low.\\
+This example shows that it is \textbf{insufficient to solely focus on the predicted rating}. Instead the similarity of a movie to a cluster should also be taken into account.\\
+Therefore for a user $u\in U$ and a movie $m\notin M_u$ we compute a score based on two variables:
+\begin{itemize}
+\item Predicted Rating $\hat{r}_{u,m}$
+\item sum of similarities, i.e.
+\[ \sum_{i=1}^{\min(15, |M_u|)} \text{similarity}(m^{(i)}, m)\]
+(see section 3.3).
+\end{itemize}
+The score is a weighted sum of these two variables. Before the variables will be normalized such that both variables are in the range between 0 and 1 (0 is the worst value and 1 is the best value). In formulas for each movie $m\notin M_u$ the score is defined as
+\begin{eqnarray}
+\text{score}(m) & := & \lambda ~ \text{score}^{\text{rating}}(m) + (1-\lambda)~ \text{score}^{\text{similarity}}(m),\nonumber
+\end{eqnarray}
+where the parameter $\lambda \in [0,1]$ weights the importance of the predicted rating to the similarity and 
+\begin{eqnarray}
+\text{score}^{\text{rating}}(m) &:=& \frac{1}{5}~ \hat{r}_{u,m}\nonumber\\
+ &=& \frac{1}{5} \left[ \sum_{i=1}^{\min(15, |M_u|)} \left(\frac{\text{similarity}(m^{(i)}, m)}{\sum_{i=1}^{\min(15, |M_u|} \text{similarity}(m^{(i)}, m)} \right)~r_{u, m^{(i)}}\right]\nonumber\\
+\text{score}^{\text{similarity}}(m) &:= & \frac{1}{\min(15, |M_u|)}\left[\sum_{i=1}^{\min(15, |M_u|)} \text{similarity}(m^{(i)}, m)\right].\nonumber
+\end{eqnarray}
+The factors $\frac{1}{5}, ~\frac{1}{\min(15, |M_u|)}$ assure the scores to be in the interval $[0,1]$. The choice of the parameter $\lambda$ is 0.5 by default.\\
+Finally we choose the movies with the highest score as suggestions.
 
 
 \subsection{Evaluation of Prediction Algorithm}
@@ -292,7 +311,7 @@ Therefore to
 
 
 % #################### Data Engineering Part #############################
-\section{Data Engineering Part}
+\section{Source of Data (Data Engineering Part)}
 
 \subsection{Source of Data}
 
@@ -303,6 +322,12 @@ Own ratings
 \subsection{Google Cloud SQL}
 
 
+
+% #################### Structure of the project ###########################
+
+\section{Structure of the deployment}
+
+This section covers the basic structure of the deployment of this app. That means we will explain how the frameworks and technologies interact (like Django, Google Compute Engine, Google Cloud SQL, Kubernetes, Jenkins, etc.). This section covers not the documentation of the code (for example the code for the backend in python or the code for the frontend in html, javascript). For this purpose you can take a look at the README-file and the other files in the Github repository.
 
 
 
